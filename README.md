@@ -310,24 +310,24 @@ world = VirtualWorld3D()
 **Monde virtuel :**
 | Couleur | Élément |
 |---------|---------|
-| <font color="#00ffff">#</font> `#00ffff` (cyan) | Larve (position courante) |
-| <font color="#00ff00">#</font> `#00ff00` (vert) | Odeur attractive |
-| <font color="#ff9900">#</font> `#ff9900` (orange) | Odeur aversive |
-| <font color="#888888">#</font> `#888888` (gris) | Odeur neutre |
-| <font color="#ffd700">#</font> `#ffd700` (jaune) | Nourriture disponible |
-| <font color="#ff0000">#</font> `#ff0000` (rouge) | Zone de danger |
-| <font color="#4d4d4d">#</font> `#4d4d4d` (marron) | Nourriture consumée |
-| <font color="#cccccc">#</font> `#cccccc` (gris clair) | Obstacle |
-| <font color="#666666">#</font> `#666666` (gris moyen) | Trajectoire parcourue |
+| <img src="https://placehold.co/12x12/00ffff" width="12" height="12" alt=""> `#00ffff` (cyan) | Larve (position courante) |
+| <img src="https://placehold.co/12x12/00ff00" width="12" height="12" alt=""> `#00ff00` (vert) | Odeur attractive |
+| <img src="https://placehold.co/12x12/ff9900" width="12" height="12" alt=""> `#ff9900` (orange) | Odeur aversive |
+| <img src="https://placehold.co/12x12/888888" width="12" height="12" alt=""> `#888888` (gris) | Odeur neutre |
+| <img src="https://placehold.co/12x12/ffd700" width="12" height="12" alt=""> `#ffd700` (jaune) | Nourriture disponible |
+| <img src="https://placehold.co/12x12/ff0000" width="12" height="12" alt=""> `#ff0000` (rouge) | Zone de danger |
+| <img src="https://placehold.co/12x12/4d4d4d" width="12" height="12" alt=""> `#4d4d4d` (marron) | Nourriture consumée |
+| <img src="https://placehold.co/12x12/cccccc" width="12" height="12" alt=""> `#cccccc` (gris clair) | Obstacle |
+| <img src="https://placehold.co/12x12/666666" width="12" height="12" alt=""> `#666666` (gris moyen) | Trajectoire parcourue |
 
 **Courbes d'activité cérébrale :**
 | Couleur | Région |
 |---------|--------|
-| <font color="#ff6b6b">#</font> `#ff6b6b` (rouge) | Sensoriel (entrées) |
-| <font color="#48dbfb">#</font> `#48dbfb` (cyan) | KC (Mushroom Body) |
-| <font color="#ff9ff3">#</font> `#ff9ff3` (rose) | MBON (sorties MB) |
-| <font color="#54a0ff">#</font> `#54a0ff` (bleu) | DAN (dopamine) |
-| <font color="#1dd1a1">#</font> `#1dd1a1` (vert) | DN (moteur) |
+| <img src="https://placehold.co/12x12/ff6b6b" width="12" height="12" alt=""> `#ff6b6b` (rouge) | Sensoriel (entrées) |
+| <img src="https://placehold.co/12x12/48dbfb" width="12" height="12" alt=""> `#48dbfb` (cyan) | KC (Mushroom Body) |
+| <img src="https://placehold.co/12x12/ff9ff3" width="12" height="12" alt=""> `#ff9ff3` (rose) | MBON (sorties MB) |
+| <img src="https://placehold.co/12x12/54a0ff" width="12" height="12" alt=""> `#54a0ff` (bleu) | DAN (dopamine) |
+| <img src="https://placehold.co/12x12/1dd1a1" width="12" height="12" alt=""> `#1dd1a1` (vert) | DN (moteur) |
 
 ## Tests
 
