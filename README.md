@@ -310,24 +310,24 @@ world = VirtualWorld3D()
 **Monde virtuel :**
 | Couleur | Élément |
 |---------|---------|
-| <span style="background:#00ffff;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#00ffff` | Larve (position courante) |
-| <span style="background:#00ff00;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#00ff00` | Odeur attractive |
-| <span style="background:#ff9900;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#ff9900` | Odeur aversive |
-| <span style="background:#888888;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#888888` | Odeur neutre |
-| <span style="background:#ffd700;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#ffd700` | Nourriture disponible |
-| <span style="background:#ff0000;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#ff0000` | Zone de danger |
-| <span style="background:#4d4d4d;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#4d4d4d` | Nourriture consumée |
-| <span style="background:#cccccc;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#cccccc` | Obstacle |
-| <span style="background:#666666;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#666666` | Trajectoire parcourue |
+| <span style="color:#00ffff">⬤</span> `#00ffff` (cyan) | Larve (position courante) |
+| <span style="color:#00ff00">⬤</span> `#00ff00` (vert) | Odeur attractive |
+| <span style="color:#ff9900">⬤</span> `#ff9900` (orange) | Odeur aversive |
+| <span style="color:#888888">⬤</span> `#888888` (gris) | Odeur neutre |
+| <span style="color:#ffd700">⬤</span> `#ffd700` (jaune) | Nourriture disponible |
+| <span style="color:#ff0000">⬤</span> `#ff0000` (rouge) | Zone de danger |
+| <span style="color:#4d4d4d">⬤</span> `#4d4d4d` (marron) | Nourriture consumée |
+| <span style="color:#cccccc">⬤</span> `#cccccc` (gris clair) | Obstacle |
+| <span style="color:#666666">⬤</span> `#666666` (gris moyen) | Trajectoire parcourue |
 
 **Courbes d'activité cérébrale :**
 | Couleur | Région |
 |---------|--------|
-| <span style="background:#ff6b6b;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#ff6b6b` | Sensoriel (entrées) |
-| <span style="background:#48dbfb;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#48dbfb` | KC (Mushroom Body) |
-| <span style="background:#ff9ff3;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#ff9ff3` | MBON (sorties MB) |
-| <span style="background:#54a0ff;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#54a0ff` | DAN (dopamine) |
-| <span style="background:#1dd1a1;display:inline-block;width:10px;height:10px;border-radius:50%"></span> `#1dd1a1` | DN (moteur) |
+| <span style="color:#ff6b6b">⬤</span> `#ff6b6b` (rouge) | Sensoriel (entrées) |
+| <span style="color:#48dbfb">⬤</span> `#48dbfb` (cyan) | KC (Mushroom Body) |
+| <span style="color:#ff9ff3">⬤</span> `#ff9ff3` (rose) | MBON (sorties MB) |
+| <span style="color:#54a0ff">⬤</span> `#54a0ff` (bleu) | DAN (dopamine) |
+| <span style="color:#1dd1a1">⬤</span> `#1dd1a1` (vert) | DN (moteur) |
 
 ## Tests
 
