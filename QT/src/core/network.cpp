@@ -103,10 +103,26 @@ void BrainNetwork::build_network() {
     make_grouped(54,  NeuronType::DNSEZ, "DNSEZ_", 10);
     make_grouped(184, NeuronType::RGN,   "RGN_",   30);
 
-    // ---- 7. Interneurons restants ----
+    // ---- 7. Interneurons (sous-types fonctionnels, 1499 neurones) ----
+    // Basé sur Winding et al. 2023 (Science 379:eadd9330) :
+    //
+    //   LN (15) : neurones locaux du lobe antennaire, inhibition latérale
+    //   MB-FBN (30) : Mushroom Body Feedback Neurons, MBON→DAN
+    //   MB-FFN (20) : Mushroom Body FeedForward Neurons, sensoriel→DAN
+    //   Pre-DNVNC (50) : interneurones prémoteurs en amont des DNVNC
+    //   Pre-DNSEZ (30) : interneurones prémoteurs en amont des DNSEZ
+    //   HEMI (200) : interneurones interhémisphériques (100 G + 100 D)
+    //   GEN_IN (~1154) : IN de traitement local (reste)
+    make_neurons(15,   NeuronType::IN, "left",  "LN", 0);
+    make_neurons(30,   NeuronType::IN, "left",  "MB_FBN", 0);
+    make_neurons(20,   NeuronType::IN, "left",  "MB_FFN", 0);
+    make_neurons(50,   NeuronType::IN, "left",  "PRE_DNVNC", 0);
+    make_neurons(30,   NeuronType::IN, "left",  "PRE_DNSEZ", 0);
+    make_neurons(100,  NeuronType::IN, "left",  "HEMI", 0);
+    make_neurons(100,  NeuronType::IN, "right", "HEMI", 0);
     int remaining = N_NEURONS - (int)neurons_.size();
     if (remaining > 0) {
-        make_grouped(remaining, NeuronType::IN, "IN_", 50);
+        make_neurons(remaining, NeuronType::IN, "left", "GEN_IN", 0);
     }
 
     // Vérification du compte total
@@ -117,22 +133,40 @@ void BrainNetwork::build_network() {
 }
 
 // ===========================================================================
-// create_synapses — Crée ~548000 synapses entre les neurones
+// create_synapses — Connectome complet basé sur Winding et al. (2023)
+//
+//   Architecture du connectome réel (3016 neurones, 548000 synapses) :
+//
+//   Entrées (480)            Interneurones (2036)          Sorties (418)
+//   ┌────────────┐   ┌──────────────────────────────┐   ┌────────────┐
+//   │ ORN (176)  │──▶│ PN (210) → KC (176) → MBON   │──▶│ DNVNC (180)│
+//   │ GRN (42)   │   │              ↕        ↕       │   │ DNSEZ (54) │
+//   │ PR (29)    │   │           DAN (30) ← MB-FBN   │   │ RGN (184)  │
+//   │ thermo (8) │   │              ↕                │   └────────────┘
+//   │ mechano(10)│   │           MB-FFN (20)         │
+//   │ proprio(12)│   │   LHN (50) → CN (108) ← MBON  │
+//   │ AN (200)   │   │   LN (15) : inhibition AL     │
+//   └────────────┘   │   Pre-DN (80) : prémoteur     │
+//                     │   HEMI (200) : interhémisph.  │
+//                     │   GEN_IN (~1154) : local       │
+//                     └──────────────────────────────┘
+//
+//   Types de synapses (distribution réelle) :
+//     a-d (66.4%) : transmission standard (toutes les voies feedforward)
+//     a-a (26.4%) : modulation (DAN→KC, MBON→DAN, KC↔KC)
+//     d-d (5.4%)  : inhibition locale (LN→PN, IN↔IN)
+//     d-a (1.8%)  : feedback (DN→IN, efference copy)
+//
+//   Statistiques clés :
+//     41% des neurones en boucles récurrentes
+//     73% des hubs liés au MB (DAN, MBON, MB-FBN, CN)
+//     93% des neurones ont un homologue controlatéral
+//     Les DAN (57%), MB-FBN (51%), MBON (45%), CN (42%) sont les plus récurrents
+//     Les PN (1.2%) et KC (0.1%) ont très peu de récurrence
 //
 //   Poids initial d'une synapse :
 //     weight = log1p(n_synapses) / log1p(50) × type_scale × WEIGHT_SCALE
 //              × variabilité_biologique(±20%)
-//
-//   Types de connexions par région :
-//     Sensoriel → PN : transmission sensorielle
-//     PN → KC : entrée du Mushroom Body (apprentissage)
-//     PN → LHN : voie innée (pas d'apprentissage)
-//     KC → MBON : sortie du MB
-//     MBON → CN : intégration des valeurs
-//     LHN → CN : valeurs innées
-//     CN → DN/RGN : commandes motrices
-//     MBON → DAN : feedback dopaminergique
-//     DAN → KC : modulation de l'apprentissage
 // ===========================================================================
 void BrainNetwork::create_synapses() {
     auto& orns  = type_indices_[NeuronType::ORN];
@@ -151,103 +185,312 @@ void BrainNetwork::create_synapses() {
     auto& dnvnc = type_indices_[NeuronType::DNVNC];
     auto& dnsez = type_indices_[NeuronType::DNSEZ];
     auto& rgns  = type_indices_[NeuronType::RGN];
-    auto& ins   = type_indices_[NeuronType::IN];
 
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-
-    // Fonction pour ajouter une synapse avec poids initial aléatoire
-    auto add_syn_with_weight = [&](int pre, int post, SynapseType type,
-                                   float prob, int min_n = 1, int max_n = 10) {
-        if (dist(rng_) < prob) {
-            // Nombre de synapses physiques (1-50)
-            int ns = std::uniform_int_distribution<int>(min_n, max_n)(rng_);
-
-            // Poids basé sur le nombre de synapses (loi log)
-            float norm = std::log1p((float)ns) / std::log1p(50.0f);
-
-            // Échelle selon le type de synapse
-            float type_scale = 1.0f;
-            switch (type) {
-                case SynapseType::A_D: type_scale = 1.0f; break;
-                case SynapseType::A_A: type_scale = 0.7f; break;
-                case SynapseType::D_D: type_scale = 0.5f; break;
-                case SynapseType::D_A: type_scale = 0.4f; break;
-            }
-
-            // Variabilité biologique : ±20% aléatoire
-            float var = std::uniform_real_distribution<float>(0.8f, 1.2f)(rng_);
-            float w = norm * type_scale * WEIGHT_SCALE * var;
-
-            Synapse s;
-            s.pre_id = pre;
-            s.post_id = post;
-            s.type = type;
-            s.weight = std::max(0.0f, w);
-            s.weight_initial = s.weight;  // Sauvegarde pour l'oubli progressif
-            // Seules les synapses a-d et d-a sont plastiques (modifiables)
-            s.plastic = (type == SynapseType::A_D || type == SynapseType::D_A);
-            synapses_.push_back(s);
-
-            neurons_[pre].n_postsynaptic++;
-            neurons_[post].n_presynaptic++;
-        }
-    };
-
-    // Fonction pour connecter deux groupes de neurones
-    auto connect_groups = [&](const std::vector<int>& pre,
-                              const std::vector<int>& post,
-                              SynapseType type, float prob,
-                              int mn = 1, int mx = 8) {
-        for (int p : pre)
-            for (int q : post)
-                add_syn_with_weight(p, q, type, prob, mn, mx);
-    };
-
-    // Regroupe tous les neurones sensoriels
-    auto all_sensory = [&]() -> std::vector<int> {
+    // Extraction des IN par compartiment
+    auto find_comp = [&](const std::string& c) -> std::vector<int> {
         std::vector<int> r;
-        for (auto* v : {&orns, &grns, &prs, &therm, &mech, &prop, &ans})
-            r.insert(r.end(), v->begin(), v->end());
+        for (const auto& n : neurons_)
+            if (n.compartment == c) r.push_back(n.id);
         return r;
     };
+    auto lns      = find_comp("LN");
+    auto mb_fbn   = find_comp("MB_FBN");
+    auto mb_ffn   = find_comp("MB_FFN");
+    auto pre_dnvc = find_comp("PRE_DNVNC");
+    auto pre_dsez = find_comp("PRE_DNSEZ");
+    auto find_hemi = [&](const std::string& h) -> std::vector<int> {
+        std::vector<int> r;
+        for (const auto& n : neurons_)
+            if (n.compartment == "HEMI" && n.hemisphere == h)
+                r.push_back(n.id);
+        return r;
+    };
+    auto hemi_l   = find_hemi("left");
+    auto hemi_r   = find_hemi("right");
+    auto gen_in   = find_comp("GEN_IN");
 
-    // --- Feedforward : sensoriel → PN → MB/LH → CN → sortie ---
-    connect_groups(all_sensory(), pns, SynapseType::A_D,
-                   P_SENSORY_TO_PN, 1, 8);
-    connect_groups(pns, kcs, SynapseType::A_D, P_PN_TO_MB, 1, 5);
-    connect_groups(pns, lhns, SynapseType::A_D, P_PN_TO_LH, 1, 6);
-    connect_groups(kcs, mbons, SynapseType::A_D, P_KC_TO_MBON, 1, 3);
-    connect_groups(mbons, cns, SynapseType::A_D, P_MBON_TO_CN, 1, 8);
-    connect_groups(lhns, cns, SynapseType::A_D, P_MBON_TO_CN * 0.8f, 1, 6);
+    std::uniform_real_distribution<float> prob_dist(0.0f, 1.0f);
 
-    // CN → Descending Neurons (commandes motrices)
-    for (int cn : cns) {
-        for (int dn : dnvnc)
-            add_syn_with_weight(cn, dn, SynapseType::A_D,
-                                P_CN_TO_OUTPUT, 1, 10);
-        for (int dn : dnsez)
-            add_syn_with_weight(cn, dn, SynapseType::A_D,
-                                P_CN_TO_OUTPUT, 1, 10);
-        for (int rg : rgns)
-            add_syn_with_weight(cn, rg, SynapseType::A_D,
-                                P_CN_TO_OUTPUT * 0.5f, 1, 5);
+    // Crée une synapse avec un poids calculé (pas de tirage probabiliste)
+    auto make_syn = [&](int pre, int post, SynapseType type, float w) {
+        Synapse s;
+        s.pre_id = pre;
+        s.post_id = post;
+        s.type = type;
+        s.weight = std::max(0.0f, w);
+        s.weight_initial = s.weight;
+        s.plastic = (type == SynapseType::A_D || type == SynapseType::D_A);
+        synapses_.push_back(s);
+        neurons_[pre].n_postsynaptic++;
+        neurons_[post].n_presynaptic++;
+    };
+
+    // Ajoute une synapse avec probabilité et poids basé sur le nb de copies
+    auto add_syn = [&](int pre, int post, SynapseType type, float prob,
+                       int min_n = 1, int max_n = 5) {
+        if (prob_dist(rng_) >= prob) return;
+        int ns = std::uniform_int_distribution<int>(min_n, max_n)(rng_);
+        float norm = std::log1p((float)ns) / std::log1p(50.0f);
+        float ts = 1.0f;
+        switch (type) {
+            case SynapseType::A_D: ts = 1.0f; break;
+            case SynapseType::A_A: ts = 0.7f; break;
+            case SynapseType::D_D: ts = 0.5f; break;
+            case SynapseType::D_A: ts = 0.4f; break;
+        }
+        float var = std::uniform_real_distribution<float>(0.8f, 1.2f)(rng_);
+        float w = norm * ts * WEIGHT_SCALE * var;
+        make_syn(pre, post, type, w);
+    };
+
+    // Connecte tous les couples entre deux groupes
+    auto connect_all = [&](const std::vector<int>& pre,
+                           const std::vector<int>& post,
+                           SynapseType type, float prob,
+                           int mn = 1, int mx = 5) {
+        for (int p : pre)
+            for (int q : post)
+                add_syn(p, q, type, prob, mn, mx);
+    };
+
+    // ==================================================================
+    //  1. SENSORY → PN  (connexion structurée par glomérule)
+    // ==================================================================
+    // Chacun des 15 glomérules virtuels contient ~12 ORN et ~14 PN
+    // Connexion intra-glomérule : probabilité élevée (0.6)
+    // Connexion inter-glomérule : très sparse (0.005) pour PNs multi-glom
+    for (int g = 0; g < N_ORN_GLOMERULI; g++) {
+        std::string glom  = "AL_glom_" + std::to_string(g);
+        std::string pn1   = "PN_" + std::to_string(g * 2);
+        std::string pn2   = "PN_" + std::to_string(g * 2 + 1);
+        std::vector<int> orn_g, pn_g;
+        for (const auto& n : neurons_) {
+            if (n.compartment == glom)          orn_g.push_back(n.id);
+            if (n.compartment == pn1 || n.compartment == pn2)
+                pn_g.push_back(n.id);
+        }
+        for (int o : orn_g)
+            for (int p : pn_g)
+                add_syn(o, p, SynapseType::A_D, 0.6f, 1, 5);
+    }
+    connect_all(orns, pns, SynapseType::A_D, 0.005f, 1, 3);
+
+    // Autres modalités sensorielles → PN
+    connect_all(grns,  pns, SynapseType::A_D, 0.08f, 1, 4);
+    connect_all(prs,   pns, SynapseType::A_D, 0.06f, 1, 4);
+    connect_all(therm, pns, SynapseType::A_D, 0.15f, 1, 3);
+    connect_all(mech,  pns, SynapseType::A_D, 0.12f, 1, 3);
+    connect_all(prop,  pns, SynapseType::A_D, 0.12f, 1, 3);
+    connect_all(ans,   pns, SynapseType::A_D, 0.04f, 1, 4);
+
+    // ==================================================================
+    //  2. PN → KC  (codage sparse, ~6 entrées PN par KC)
+    // ==================================================================
+    // Les KC n'ont quasiment pas de récurrence (0.1% dans le réel)
+    connect_all(pns, kcs, SynapseType::A_D, 0.08f, 1, 4);
+
+    // ==================================================================
+    //  3. PN → LHN  (voie innée des valeurs, Lateral Horn)
+    // ==================================================================
+    connect_all(pns, lhns, SynapseType::A_D, 0.15f, 1, 5);
+
+    // ==================================================================
+    //  4. KC → MBON  (sortie du MB, compartiment-spécifique)
+    // ==================================================================
+    // Chaque compartiment KC (0-6) projette vers 2 types MBON
+    // 7 compart × 2 = 14 connexions → chaque MBON reçoit de ~1 compart
+    for (int c = 0; c < N_KC_COMPARTMENTS; c++) {
+        std::string kc_c = "MB_comp_" + std::to_string(c);
+        int mb1 = (c * 2) % N_MBON_TYPES;
+        int mb2 = (c * 2 + 1) % N_MBON_TYPES;
+        std::string mb_c1 = "MBON_type_" + std::to_string(mb1);
+        std::string mb_c2 = "MBON_type_" + std::to_string(mb2);
+        std::vector<int> kc_group, mb1_group, mb2_group;
+        for (const auto& n : neurons_) {
+            if (n.type != NeuronType::KC && n.type != NeuronType::MBON)
+                continue;
+            if (n.compartment == kc_c)  kc_group.push_back(n.id);
+            if (n.compartment == mb_c1) mb1_group.push_back(n.id);
+            if (n.compartment == mb_c2) mb2_group.push_back(n.id);
+        }
+        connect_all(kc_group, mb1_group, SynapseType::A_D, 0.25f, 1, 4);
+        connect_all(kc_group, mb2_group, SynapseType::A_D, 0.25f, 1, 4);
     }
 
-    // --- Boucles récurrentes d'apprentissage ---
-    // MBON → DAN (feedback, type a-a : modulation)
-    connect_groups(mbons, dans, SynapseType::A_A, P_MBON_TO_DAN, 1, 5);
-    // DAN → KC (modulation, type d-a : feedback dendro-axonique)
-    connect_groups(dans, kcs, SynapseType::D_A, P_DAN_TO_KC, 1, 4);
+    // ==================================================================
+    //  5. MBON → CN  (convergence des valeurs apprises)
+    // ==================================================================
+    // Les CN sont très récurrents (42%) et intègrent MB + LH
+    connect_all(mbons, cns, SynapseType::A_D, 0.3f, 1, 6);
 
-    // DN → Interneurons (efference copy : prédiction du mouvement)
+    // ==================================================================
+    //  6. LHN → CN  (convergence des valeurs innées)
+    // ==================================================================
+    connect_all(lhns, cns, SynapseType::A_D, 0.2f, 1, 5);
+
+    // ==================================================================
+    //  7. CN → DN  (commandes motrices par groupe fonctionnel)
+    // ==================================================================
+    auto dn_of_comp = [&](const std::string& c) -> std::vector<int> {
+        std::vector<int> r;
+        for (const auto& n : neurons_)
+            if (n.type == NeuronType::DNVNC && n.compartment == c)
+                r.push_back(n.id);
+        return r;
+    };
+    auto fwd_dn = dn_of_comp("DNVNC_FWD");
+    auto ltl_dn = dn_of_comp("DNVNC_LTL");
+    auto ltr_dn = dn_of_comp("DNVNC_LTR");
+    auto bwd_dn = dn_of_comp("DNVNC_BWD");
+    for (int cn : cns) {
+        for (int d : fwd_dn) add_syn(cn, d, SynapseType::A_D, 0.3f, 1, 6);
+        for (int d : ltl_dn) add_syn(cn, d, SynapseType::A_D, 0.25f, 1, 5);
+        for (int d : ltr_dn) add_syn(cn, d, SynapseType::A_D, 0.25f, 1, 5);
+        for (int d : bwd_dn) add_syn(cn, d, SynapseType::A_D, 0.2f, 1, 4);
+    }
+    connect_all(cns, dnsez, SynapseType::A_D, 0.3f, 1, 6);
+    connect_all(cns, rgns,  SynapseType::A_D, 0.12f, 1, 4);
+
+    // ==================================================================
+    //  8. BOUCLES RÉCURRENTES DU MB (apprentissage)
+    // ==================================================================
+    // Les neurones du centre d'apprentissage sont les plus récurrents :
+    //   DAN (57%), MB-FBN (51%), MBON (45%), CN (42%)
+    // Types : a-a pour la modulation (DAN→KC, MBON→DAN)
+    //         a-d pour la transmission KC→MBON déjà faite en section 4
+
+    // MBON → DAN : feedback de valeur (type a-a, modulation)
+    connect_all(mbons, dans, SynapseType::A_A, 0.3f, 1, 4);
+    // DAN → KC : signal d'enseignement (type a-a, modulation présynaptique)
+    connect_all(dans, kcs, SynapseType::A_A, 0.2f, 1, 4);
+    // KC → KC : inhibition latérale entre KC (type a-a, mAChR-B)
+    connect_all(kcs, kcs, SynapseType::A_A, 0.02f, 1, 3);
+
+    // ==================================================================
+    //  9. INTERNEURONES SPÉCIALISÉS DU MB
+    // ==================================================================
+    // MB-FBN → DAN : feedback de prédiction de valeur (a-a)
+    connect_all(mb_fbn, dans, SynapseType::A_A, 0.25f, 1, 4);
+    // MBON → MB-FBN : entrée du feedback (a-a)
+    connect_all(mbons, mb_fbn, SynapseType::A_A, 0.2f, 1, 4);
+    // MB-FBN → KC : modulation (a-d)
+    connect_all(mb_fbn, kcs, SynapseType::A_D, 0.1f, 1, 4);
+    // MB-FBN → MBON : modulation de la sortie (a-d)
+    connect_all(mb_fbn, mbons, SynapseType::A_D, 0.15f, 1, 4);
+    // MB-FFN → DAN : info sensorielle feedforward (a-d)
+    connect_all(mb_ffn, dans, SynapseType::A_D, 0.25f, 1, 3);
+    // MB-FFN → KC : info sensorielle feedforward (a-d)
+    connect_all(mb_ffn, kcs, SynapseType::A_D, 0.08f, 1, 3);
+
+    // ==================================================================
+    // 10. CIRCUITS INHIBITEURS LOCAUX (LN du lobe antennaire)
+    // ==================================================================
+    // LN → PN : inhibition latérale inter-glomérule (d-d)
+    connect_all(lns, pns, SynapseType::D_D, 0.3f, 1, 4);
+    // LN → LN : inhibition latérale entre LN (d-d)
+    connect_all(lns, lns, SynapseType::D_D, 0.15f, 1, 3);
+
+    // ==================================================================
+    // 11. CIRCUITS PRÉMOTEURS
+    // ==================================================================
+    // Pre-DNVNC → CN : intégration prémotrice
+    connect_all(pre_dnvc, cns, SynapseType::A_D, 0.15f, 1, 5);
+    // Pre-DNVNC → DNVNC : commande directe
+    for (int pd : pre_dnvc)
+        for (int d : dnvnc)
+            add_syn(pd, d, SynapseType::A_D, 0.12f, 1, 5);
+    // Pre-DNSEZ → DNSEZ
+    connect_all(pre_dsez, dnsez, SynapseType::A_D, 0.15f, 1, 4);
+
+    // ==================================================================
+    // 12. EFFERENCE COPY (feedback des DN vers le cerveau)
+    // ==================================================================
+    // Les DN renvoient une copie de leurs commandes motrices vers :
+    //   les CN (intégration), les pre-DN (boucle prémotrice),
+    //   les neurones du MB (modulation), et les IN génériques
+    // Type d-a (dendro-axonique) : feedback rétrograde
+    std::vector<int> eff_targets;
+    for (int id : pre_dnvc) eff_targets.push_back(id);
+    for (int id : pre_dsez) eff_targets.push_back(id);
+    for (int id : cns)      eff_targets.push_back(id);
+    for (int id : mb_fbn)   eff_targets.push_back(id);
+    for (int id : mb_ffn)   eff_targets.push_back(id);
+    for (int id : dans)     eff_targets.push_back(id);
+    for (int id : gen_in)   eff_targets.push_back(id);
     for (int dn : dnvnc)
-        for (int i = 0; i < 100 && i < (int)ins.size(); i++)
-            add_syn_with_weight(dn, ins[i], SynapseType::D_A,
-                                P_DN_FEEDBACK, 1, 3);
+        for (int t : eff_targets)
+            add_syn(dn, t, SynapseType::D_A, 0.02f, 1, 3);
     for (int dn : dnsez)
-        for (int i = 0; i < 100 && i < (int)ins.size(); i++)
-            add_syn_with_weight(dn, ins[i], SynapseType::D_A,
-                                P_DN_FEEDBACK, 1, 3);
+        for (int t : eff_targets)
+            add_syn(dn, t, SynapseType::D_A, 0.02f, 1, 3);
+
+    // ==================================================================
+    // 13. CONNEXIONS INTERHÉMISPHÉRIQUES (G ↔ D)
+    // ==================================================================
+    // 93% des neurones ont un homologue controlatéral
+    // 37% ont des branches controlatérales
+    // HEMI-L → HEMI-R et HEMI-R → HEMI-L
+    for (int hl : hemi_l)
+        for (int hr : hemi_r)
+            add_syn(hl, hr, SynapseType::A_D, 0.03f, 1, 3);
+    for (int hr : hemi_r)
+        for (int hl : hemi_l)
+            add_syn(hr, hl, SynapseType::A_D, 0.03f, 1, 3);
+    // Connexions croisées pour les grands types neuronaux
+    std::vector<NeuronType> cross_types = {
+        NeuronType::PN, NeuronType::KC, NeuronType::MBON,
+        NeuronType::DAN, NeuronType::CN, NeuronType::LHN
+    };
+    for (auto t : cross_types) {
+        auto& idx = type_indices_[t];
+        int half = (int)idx.size() / 2;
+        if (half < 1) continue;
+        for (int i = 0; i < half; i++)
+            for (int j = half; j < (int)idx.size(); j++)
+                add_syn(idx[i], idx[j], SynapseType::A_D, 0.01f, 1, 2);
+    }
+
+    // ==================================================================
+    // 14. FOND RÉCURRENT DES IN GÉNÉRIQUES
+    // ==================================================================
+    // Chaque GEN_IN crée ~400 synapses vers des cibles aléatoires.
+    // Cela génère le fond dense et récurrent (~40% de récurrence) du
+    // connectome réel, où les IN forment le backbone du traitement local.
+    //
+    // Distribution des types de synapses (copie le réel) :
+    //   a-d 66%, a-a 26%, d-d 6%, d-a 2%
+    std::uniform_int_distribution<int> target_dist(0, N_NEURONS - 1);
+    std::uniform_real_distribution<float> bg_weight(0.0f, WEIGHT_SCALE * 0.5f);
+    std::poisson_distribution<int> poisson_gen(430);
+    for (int gid : gen_in) {
+        int n_syn = poisson_gen(rng_);
+        for (int i = 0; i < n_syn; i++) {
+            int post = target_dist(rng_);
+            if (post == gid) continue;
+            int r = std::uniform_int_distribution<int>(0, 99)(rng_);
+            SynapseType st;
+            if (r < 66)      st = SynapseType::A_D;
+            else if (r < 92) st = SynapseType::A_A;
+            else if (r < 98) st = SynapseType::D_D;
+            else             st = SynapseType::D_A;
+            make_syn(gid, post, st, bg_weight(rng_));
+        }
+    }
+
+    // ==================================================================
+    // 15. IN → IN : circuits récurrents locaux
+    // ==================================================================
+    // Connexions d-d entre IN génériques pour le traitement local
+    std::poisson_distribution<int> poisson_loc(60);
+    for (int gid : gen_in) {
+        int n_loc = poisson_loc(rng_);
+        for (int i = 0; i < n_loc; i++) {
+            int post = target_dist(rng_);
+            if (post == gid) continue;
+            if (neurons_[post].type != NeuronType::IN) continue;
+            add_syn(gid, post, SynapseType::D_D, 0.1f, 1, 2);
+        }
+    }
 }
 
 // ===========================================================================

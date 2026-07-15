@@ -53,9 +53,12 @@ private:
     bool points_dirty_ = true;
     bool lines_dirty_ = true;
 
-    // Orthographic camera: top-down, fixed
-    float zoom_ = 60.0f;
+    // Orthographic camera: top-down with auto-follow
+    // La caméra suit automatiquement la position de la larve.
+    // Le pan (glisser-souris) sert de décalage relatif.
+    float zoom_ = 80.0f;
     QVector2D pan_{0.0f, 0.0f};
+    Eigen::Vector3f insect_pos_{25.0f, 25.0f, 10.0f};
     QPoint last_mouse_pos_;
     bool dragging_ = false;
 };
