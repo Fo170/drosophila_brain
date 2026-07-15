@@ -2,18 +2,21 @@
 
 [![Tests](https://img.shields.io/badge/tests-7%2F7%20passing-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)]()
+[![C++](https://img.shields.io/badge/C%2B%2B-Qt6-green)]()
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)]()
 
 Simulateur biologiquement réaliste du connectome complet du cerveau de larve de *Drosophila melanogaster*, basé sur l'étude de **Winding et al. (2023)** publiée dans *Science*.
 
+Deux implémentations : **Python** (prototypage, tests) et **C++ Qt6** (performance, rendu OpenGL temps réel).
+
 ## Caractéristiques
 
 - **3016 neurones** avec dynamique temporelle réaliste (fuite + sigmoïde)
-- **~548 000 synapses** avec 4 types biologiques (a-d, a-a, d-d, d-a)
-- **Apprentissage DAN-modulé** : récompense/punition via dopamine
-- **Propagation récurrente** avec boucles de feedback
-- **Monde virtuel 2D/3D** avec odeurs, nourriture, dangers
-- **Visualisation temps réel** 2D et anatomique 3D
+- **~548 000 synapses** avec 4 types biologiques (a-d, a-a, d-d, d-a) et distribution réaliste
+- **Apprentissage DAN-modulé** : STDP + règle 3 facteurs (Δw = η × DAN × pré × post)
+- **Propagation récurrente** avec boucles de feedback (MBON↔DAN↔KC, efference copy, interhémisphérique)
+- **Monde virtuel 2D/3D** avec odeurs (attractif/aversif/neutre), nourriture, dangers, obstacles
+- **Visualisation temps réel** 2D (C++ Qt6 QOpenGLWidget) et anatomique 3D (Python)
 
 ## Architecture du Cerveau Simulé
 
@@ -36,6 +39,91 @@ Simulateur biologiquement réaliste du connectome complet du cerveau de larve de
    Neurones              Réseau de traitement   Commandes
    sensoriels            et intégration         motrices/endocrines
 ```
+
+## Implémentation C++ Qt6
+
+Le répertoire `QT/` contient une réécriture complète en **C++20 / Qt6 / QOpenGLWidget / Eigen3** pour des performances maximales.
+
+### Architecture C++
+
+```
+QT/
+├── CMakeLists.txt
+├── build/
+│   └── drosophila_brain          # Binaire compilé (~815 Ko)
+└── src/
+    ├── main.cpp                  # Point d'entrée
+    ├── config.h                  # Paramètres globaux (3016 N, 548K S, etc.)
+    ├── core/
+    │   ├── neuron.h/.cpp         # Neurone : V(t) fuite + σ(V) sigmoïde
+    │   ├── synapse.h/.cpp        # Synapse : STDP, traces pré/post, 4 types
+    │   └── network.h/.cpp        # Réseau 3016 N, connectome structuré
+    ├── world/
+    │   └── world_3d.h/.cpp       # Monde 2D avec entités + boucle d'interaction
+    ├── render/
+    │   └── glwidget.h/.cpp       # Rendu OpenGL : shaders points/lignes + border
+    └── ui/
+        ├── mainwindow.h/.cpp     # Fenêtre 1400×900 fixe, 4 panneaux latéraux
+        └── insect_ctrl.h/.cpp    # Contrôles manuels (stimulus, reward, punish)
+```
+
+### Différences clés Python → C++
+
+| Aspect | Python | C++ Qt6 |
+|--------|--------|---------|
+| Langage | Python 3.12 | C++20 |
+| Rendu | Matplotlib / Mayavi | QOpenGLWidget (shaders GLSL) |
+| Performance | ~17 pas/s | ~200+ pas/s (estimation) |
+| Connectome | All-to-all aléatoire | Structuré : 7 sous-types d'IN |
+| DNVNC | 180 indifférenciés | 4 groupes fonctionnels (FWD/LTL/LTR/BWD) |
+| `reset()` | Poids réinitialisés | Reconstruction aléatoire complète |
+| Caméra | Suivi automatique | Vue fixe (pan glisser-souris) |
+| Fenêtre | Redimensionnable | Fixe 1400×900 |
+| Panneaux UI | 4 panneaux temps réel | 4 panneaux (infos, contrôles, stimuli, légende) |
+| Distribution synaptique | Simplifiée | Proche du réel (a-d 66%, a-a 24.5%, d-d 6.4%, d-a 3.1%) |
+
+### Connectome Structuré (C++)
+
+Le réseau utilise **7 sous-types d'interneurones** pour un connectome réaliste :
+
+| Sous-type IN | Effectif | Rôle |
+|-------------|----------|------|
+| LN (Local Neurons) | 150 | Inhibition latérale AL |
+| MB-FBN (FeedBack) | 80 | Boucle MBON→DAN→KC |
+| MB-FFN (FeedForward) | 70 | Feed-forward KC→MBON |
+| Pre-DNVNC | 60 | Prémoteur locomotion |
+| Pre-DNSEZ | 50 | Prémoteur comportement |
+| HEMI (Hémisphérique) | 89 | Communication gauche↔droite |
+| GEN_IN (Générique) | 1000 | Connexions de fond, densité ~5% |
+
+**Synapses totales** : ~535 000 (vs 548 000 cible), densité ~5.9%.
+
+### Build et Lancement (C++)
+
+```bash
+# Prérequis : Qt6, Eigen3, CMake, compilateur C++20
+sudo apt install qt6-base-dev libeigen3-dev cmake g++
+
+cd QT && mkdir -p build && cd build
+cmake .. && make -j$(nproc)
+./drosophila_brain
+```
+
+### Contrôles (C++)
+
+| Touche | Action |
+|--------|--------|
+| `R` | Récompense (DAN = +0.8) |
+| `P` | Punition (DAN = -0.4) |
+| `O` | Stimulus olfactif |
+| `G` | Stimulus gustatif |
+| `V` | Stimulus visuel |
+| `T` | Stimulus thermique |
+| `M` | Stimulation mécano |
+| `S` | Step (pas de simulation) |
+| `Espace` | Play/Pause |
+| Glisser-souris | Pan (déplacement vue) |
+| Molette | Zoom |
 
 ## Structure du Projet
 
@@ -82,6 +170,18 @@ drosophila_brain/
 └── utils/
     ├── stats.py                 # Statistiques réseau (hubs, clustering)
     └── io.py                    # Sauvegarde/chargement états
+
+QT/                              # Implémentation C++ Qt6 performante
+├── CMakeLists.txt
+├── build/
+│   └── drosophila_brain         # Binaire compilé
+└── src/
+    ├── main.cpp
+    ├── config.h
+    ├── core/                    # Neurone, Synapse, Réseau (connectome structuré)
+    ├── world/                   # Monde virtuel 2D
+    ├── render/                  # QOpenGLWidget (shaders GLSL)
+    └── ui/                      # Fenêtre + contrôles
 ```
 
 ## Installation

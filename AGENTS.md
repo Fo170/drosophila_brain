@@ -73,6 +73,18 @@ Inputs (477) → PNs (210) → [KC (176) + LHN (50)] → CN (108) → Outputs (4
 9. Ring Gland Neurons (RGN)
 10. Interneurons (IN)
 
+**Sous-types d'interneurones** (implémentation C++ structurée) :
+
+| Sous-type IN | Effectif | Connexions | Rôle |
+|-------------|----------|-----------|------|
+| LN | 150 | AL (glomérules) | Inhibition latérale |
+| MB-FBN | 80 | MBON ↔ DAN ↔ KC | Boucle d'apprentissage |
+| MB-FFN | 70 | KC → MBON | Feed-forward |
+| Pre-DNVNC | 60 | CN → DNVNC | Prémoteur locomotion |
+| Pre-DNSEZ | 50 | CN → DNSEZ | Prémoteur comportement |
+| HEMI | 89 | G↔D hémisphères | Communication interhémisphérique |
+| GEN_IN | 1000 | Tous | Connexions de fond (densité ~5%) |
+
 **Boucles récurrentes** :
 - MBON → DAN → KC (apprentissage)
 - DN → interneurons (efference copy)
@@ -80,7 +92,7 @@ Inputs (477) → PNs (210) → [KC (176) + LHN (50)] → CN (108) → Outputs (4
 
 ---
 
-## Agent : Connectome Synthétique (`data/connectome_synthetic.py`)
+## Agent : Connectome Synthétique (`data/connectome_synthetic.py` / `core/network.h`)
 
 **Rôle** : Génère une matrice de connectivité 3016×3016 réaliste.
 
@@ -90,12 +102,26 @@ Inputs (477) → PNs (210) → [KC (176) + LHN (50)] → CN (108) → Outputs (4
 - 41% de neurones en boucles récurrentes
 - 73% des hubs liés au Mushroom Body
 
-**Génération** :
+**Implémentation Python** (`data/connectome_synthetic.py`):
 1. Assignation des types de neurones par effectifs
 2. Connexions par région (sensory→PN, PN→MB, etc.)
 3. Boucles récurrentes
 4. Connexions interhémisphériques
 5. Connexions de fond pour atteindre la densité cible
+
+**Implémentation C++** (`core/network.h`) — connectome structuré avec 7 sous-types d'IN :
+1. Connexions sensorielles structurées (ORN→glomérules→PN, GRN→SEZ, PR→centres visuels, etc.)
+2. Connexions PN→KC (glomérule→compartiment) et PN→LHN (toutes modalités)
+3. Connexions KC→MBON par compartiment (176 KC × 7 compartiments → 48 MBON)
+4. Boucle MBON→DAN→KC (apprentissage récurrent)
+5. Connexions MBON/LHN/PN→CN (convergence)
+6. CN→DN (groupe fonctionnel : FWD/LTL/LTR/BWD)
+7. Connexions DN→IN (efference copy) et IN→DN (proprioception prédictive)
+8. Connexions interhémisphériques (HEMI : gauche↔droite)
+9. Connexions de fond (GEN_IN) : ~5% densité
+10. Distribution biologique des types synaptiques : a-d 66%, a-a 24.5%, d-d 6.4%, d-a 3.1%
+
+**Résultat C++** : ~535 000 synapses (~548 000 cible), densité ~5.9%
 
 ---
 
@@ -182,13 +208,18 @@ PN (toutes modalités) → 50 LHN → CN
 ```
 Cerveau (CN, MBON)
    ↓
-180 DNVNC → muscles segmentaires (locomotion)
- 54 DNSEZ → comportements (alimentation)
+DNVNC (180) → muscles segmentaires (locomotion)
+  ├─ FWD (60) : avancer
+  ├─ LTL (45) : tourner à gauche
+  ├─ LTR (45) : tourner à droite
+  └─ BWD (30) : reculer
+DNSEZ (54) → comportements (alimentation)
   200 AN ← feedback sensoriel du corps
 ```
 
 **Commandes locomotrices** :
-- Forward / Backward / Turn Left / Turn Right / Stop
+- **Formule mouvement** : `vitesse = FWD − BWD`, `virage = LTR − LTL`
+- Permet toutes les combinaisons : avancer, reculer, tourner, arrêt
 
 **Efference copy** : DNs → interneurons (prédiction du mouvement)
 
@@ -214,8 +245,8 @@ Cerveau (CN, MBON)
 
 **Rôle** : Organise les commandes de sortie.
 
-**Commandes** :
-- **Locomotion** : DNVNC → avancer/reculer/tourner/arrêt
+**Commandes** (C++ — 4 groupes fonctionnels DNVNC) :
+- **Locomotion** : DNVNC → `vitesse = FWD − BWD`, `virage = LTR − LTL`
 - **Comportement** : DNSEZ → manger/nettoyer/reposer
 - **Endocrine** : RGN → hormones (croissance, métabolisme)
 
@@ -268,9 +299,9 @@ Monde → Stimuli sensoriels → Cerveau → Action → Monde
 
 ---
 
-## Agent : Visualisation 2D (`visualization/real_time_plot.py`)
+## Agent : Visualisation 2D Python (`visualization/real_time_plot.py`)
 
-**Rôle** : Affiche l'activité cérébrale en temps réel.
+**Rôle** : Affiche l'activité cérébrale en temps réel (Python).
 
 **Panneaux** :
 1. **Carte 2D** : 3016 neurones colorés (rouge = actif, bleu = inactif)
@@ -282,7 +313,38 @@ Monde → Stimuli sensoriels → Cerveau → Action → Monde
 
 ---
 
-## Agent : Visualisation 3D (`visualization/brain_3d.py`)
+## Agent : Visualisation GLWidget (`render/glwidget.h/.cpp` — C++ Qt6)
+
+**Rôle** : Rendu OpenGL temps réel performant du cerveau et du monde virtuel.
+
+**Pipeline** :
+- **Shaders GLSL** pour les points (neurones, entités du monde) et lignes (trajectoire)
+- **Pipeline fixe** pour la bordure du monde
+- Mise à jour différée (dirty flag) des VBO pour minimiser les transferts GPU
+
+**Éléments affichés** :
+- **Points colorés** : larve (blanc), odeurs attractives (vert), odeurs aversives (rouge), nourriture (jaune), obstacles (gris)
+- **Trajectoire** : lignes grises continues de la larve
+- **Bordure** : rectangle gris-bleu à 95% de la zone visible
+
+**Caméra** :
+- **Fixée** sur le centre du monde (pas de suivi automatique)
+- **Pan** : glisser-souris
+- **Zoom** : molette
+
+**Fenêtre** : 1400×900 pixels, redimensionnement désactivé (`setFixedSize`)
+
+**Panneaux** :
+1. **Carte 2D** : 3016 neurones colorés (rouge = actif, bleu = inactif)
+2. **Courbes temporelles** : activité par région
+3. **Histogramme** : distribution des poids synaptiques
+4. **Info texte** : temps, neurones actifs, activité moyenne
+
+**Mise à jour** : toutes les 10 pas de simulation.
+
+---
+
+## Agent : Visualisation 3D Python (`visualization/brain_3d.py`)
 
 **Rôle** : Vue anatomique 3D du cerveau.
 
@@ -340,10 +402,10 @@ Monde Virtuel ──► Sensory Tracts ──► Circuits (AL, MB, LH)
                               Feedback Loops ──► Brain Network
                                          │
                                          ▼
-                              Learning (DAN-modulé) ──► Synapses
-                                         │
-                                         ▼
-                              Visualization (2D/3D)
+                               Learning (DAN-modulé) ──► Synapses
+                                          │
+                                          ▼
+                               Visualization (Python 2D/3D + C++ GLWidget)
 ```
 
 ---
@@ -376,4 +438,4 @@ Monde Virtuel ──► Sensory Tracts ──► Circuits (AL, MB, LH)
 
 ---
 
-*Document généré automatiquement le 2026-07-15*
+*Document généré automatiquement le 2026-07-16*

@@ -180,19 +180,13 @@ void GLWidget::resizeGL(int w, int h) {
 }
 
 // ===========================================================================
-// viewMatrix — Matrice de vue centrée sur la larve + décalage (pan)
-//
-//   La caméra suit automatiquement la larve (insect_pos_).
-//   Le pan (glisser-souris) ajoute un décalage relatif.
-//   Ainsi, même si la larve se déplace au-delà du monde initial,
-//   la caméra reste centrée sur elle.
+// viewMatrix — Matrice de vue fixe centrée sur le monde
+//   La caméra est fixe (pan contrôlé uniquement par glisser-souris).
+//   Le monde de 50×50 unités est centré sur (0,0).
 // ===========================================================================
 QMatrix4x4 GLWidget::viewMatrix() const {
     QMatrix4x4 view;
-    // Centre sur la larve (convertie en coordonnées OpenGL : -25 → -50, +25 → 0)
-    float cx = insect_pos_.x() - 25.0f;
-    float cy = insect_pos_.y() - 25.0f;
-    view.translate(-cx - pan_.x(), -cy - pan_.y(), 0.0f);
+    view.translate(-pan_.x(), -pan_.y(), 0.0f);
     return view;
 }
 
@@ -262,24 +256,23 @@ void GLWidget::paintGL() {
         line_shader_->release();
     }
 
-    // --- Bordure du monde (pipeline fixe) ---
-    // La bordure suit la larve via le même centrage que viewMatrix()
-    float cx = insect_pos_.x() - 25.0f;
-    float cy = insect_pos_.y() - 25.0f;
+    // --- Bordure à 95% de la zone visible ---
     glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-half_w, half_w, -half_h, half_h, -100, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(-cx - pan_.x(), -cy - pan_.y(), 0);
+    glTranslatef(-pan_.x(), -pan_.y(), 0);
 
-    glColor3f(0.2f, 0.2f, 0.3f); // Gris-bleu foncé pour la bordure
+    float bw = half_w * 0.95f;
+    float bh = half_h * 0.95f;
+    glColor3f(0.2f, 0.2f, 0.3f);
     glBegin(GL_LINE_LOOP);
-    glVertex3f(-25.0f, -25.0f, 0);
-    glVertex3f( 25.0f, -25.0f, 0);
-    glVertex3f( 25.0f,  25.0f, 0);
-    glVertex3f(-25.0f,  25.0f, 0);
+    glVertex3f(-bw, -bh, 0);
+    glVertex3f( bw, -bh, 0);
+    glVertex3f( bw,  bh, 0);
+    glVertex3f(-bw,  bh, 0);
     glEnd();
 }
 
@@ -298,9 +291,6 @@ void GLWidget::paintGL() {
 //   dans l'espace OpenGL.
 // ===========================================================================
 void GLWidget::updateWorld(const VirtualWorld3D& world) {
-    // Sauvegarde de la position pour le centrage automatique de la caméra
-    insect_pos_ = world.insect_pos();
-
     point_vertices_.clear();
     line_vertices_.clear();
 
