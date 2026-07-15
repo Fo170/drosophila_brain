@@ -385,20 +385,37 @@ void MainWindow::simulationStep() {
         network_->step(DT);
 
         // ==================================================================
-        // PHASE 3 : COMMANDE MOTRICE — Lecture des neurones moteurs
+        // PHASE 3 : COMMANDE MOTRICE — 4 groupes fonctionnels de DNVNC
         //
-        //   Les DNVNC (Descending Neurons to VNC) contrôlent la locomotion.
-        //   La moitié gauche et la moitié droite donnent :
-        //     - speed = (gauche + droite) × 1.5  (vitesse linéaire)
-        //     - turn = (droite - gauche) × π/2   (virage)
+        //   Les 180 DNVNC sont répartis en 4 groupes contrôlant chacun
+        //   un muscle ou une action différente (comme dans la réalité
+        //   biologique où chaque motoneurone innerve un muscle spécifique).
         //
-        //   Si gauche > droite : la larve tourne à droite (et vice-versa).
-        //   C'est un contrôle directionnel simple par différence.
+        //     forward  (60) : propulsion avant (péristaltisme)
+        //     left-turn (45) : contraction des muscles du côté gauche
+        //                      → la larve tourne à DROITE
+        //     right-turn(45) : contraction des muscles du côté droit
+        //                      → la larve tourne à GAUCHE
+        //     backward (30) : propulsion arrière
+        //
+        //   vitesse = forward_act - backward_act
+        //     positive → avance, négative → recule
+        //
+        //   virage = right_turn_act - left_turn_act
+        //     positif → tourne à gauche, négatif → tourne à droite
+        //
+        //   Cette organisation permet à la larve de se déplacer dans
+        //   toutes les directions, chose impossible avec le simple split
+        //   gauche/droite où l'asymétrie initiale des poids aléatoires
+        //   créait un biais de virage systématique.
         // ==================================================================
-        float left_act = network_->get_dn_vnc_left_activity();
-        float right_act = network_->get_dn_vnc_right_activity();
-        float speed = (left_act + right_act) * 1.5f;
-        float turn = (right_act - left_act) * 3.14159f * 0.5f;
+        float fwd_act = network_->get_dn_vnc_forward();
+        float ltl_act = network_->get_dn_vnc_left_turn();
+        float ltr_act = network_->get_dn_vnc_right_turn();
+        float bwd_act = network_->get_dn_vnc_backward();
+
+        float speed = (fwd_act - bwd_act) * 2.0f;
+        float turn = (ltr_act - ltl_act) * 1.5f;
 
         world_->move_insect_3d(speed, turn, 0.0f);
 

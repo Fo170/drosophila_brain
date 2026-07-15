@@ -170,9 +170,15 @@ public:
     RegionActivity get_region_activity() const;
     NetworkState get_state() const;
 
-    // Activité motrice gauche/droite (pour le contrôle de la locomotion)
-    float get_dn_vnc_left_activity() const;
-    float get_dn_vnc_right_activity() const;
+    // Activité motrice par groupe fonctionnel
+    //   forward  — propulsion avant (60 neurones)
+    //   left_turn  — contraction côté gauche → virage à droite (45)
+    //   right_turn — contraction côté droit → virage à gauche (45)
+    //   backward  — propulsion arrière (30)
+    float get_dn_vnc_forward() const;
+    float get_dn_vnc_left_turn() const;
+    float get_dn_vnc_right_turn() const;
+    float get_dn_vnc_backward() const;
 
     const std::vector<Neuron>& neurons() const { return neurons_; }
     const std::vector<Synapse>& synapses() const { return synapses_; }

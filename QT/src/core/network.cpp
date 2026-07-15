@@ -34,6 +34,9 @@ float BrainNetwork::sigmoid(float x) {
 //   7. Interneurons restants
 // ===========================================================================
 void BrainNetwork::build_network() {
+    neurons_.clear();
+    synapses_.clear();
+    type_indices_.clear();
     neurons_.reserve(N_NEURONS);
     int id = 0;
 
@@ -88,7 +91,15 @@ void BrainNetwork::build_network() {
     make_grouped(108, NeuronType::CN,    "CN",     20);
 
     // ---- 6. Descending Neurons ----
-    make_grouped(180, NeuronType::DNVNC, "DNVNC_", 30);
+    // DNVNC : 4 groupes fonctionnels pour une locomotion réaliste
+    //   Forward (60) : propulsion avant (les deux côtés en phase)
+    //   Left-turn (45) : contraction côté gauche → virage à droite
+    //   Right-turn (45) : contraction côté droit → virage à gauche
+    //   Backward (30) : propulsion arrière
+    make_neurons(60,  NeuronType::DNVNC, "left", "DNVNC_FWD", 0);
+    make_neurons(45,  NeuronType::DNVNC, "left", "DNVNC_LTL", 0);
+    make_neurons(45,  NeuronType::DNVNC, "left", "DNVNC_LTR", 0);
+    make_neurons(30,  NeuronType::DNVNC, "left", "DNVNC_BWD", 0);
     make_grouped(54,  NeuronType::DNSEZ, "DNSEZ_", 10);
     make_grouped(184, NeuronType::RGN,   "RGN_",   30);
 
@@ -513,55 +524,73 @@ float BrainNetwork::mean_activity() const {
 }
 
 // ===========================================================================
-// get_dn_vnc_left/right_activity — Activité motrice gauche/droite
+// Accesseurs DNVNC par groupe fonctionnel
 //
-//   Les DNVNC sont divisés en deux moitiés : gauche et droite.
-//   La différence d'activité entre les deux détermine le virage :
-//     - left > right → tourne à droite
-//     - right > left → tourne à gauche
-//   La somme des deux détermine la vitesse.
+//   Les 180 DNVNC sont répartis en 4 groupes qui contrôlent différentes
+//   actions motrices. Chaque groupe est identifié par son compartment :
+//
+//     DNVNC_FWD — propulsion avant (60 neurones)
+//     DNVNC_LTL — virage à droite / contraction gauche (45)
+//     DNVNC_LTR — virage à gauche / contraction droite (45)
+//     DNVNC_BWD — propulsion arrière (30)
+//
+//   La locomotion est calculée dans mainwindow.cpp à partir de ces 4
+//   valeurs :
+//     speed = FWD - BWD    (avance moins recule)
+//     turn  = LTR - LTL    (tourne à gauche si LTR > LTL, droite sinon)
 // ===========================================================================
-float BrainNetwork::get_dn_vnc_left_activity() const {
-    auto it = type_indices_.find(NeuronType::DNVNC);
-    if (it == type_indices_.end() || it->second.empty()) return 0.0f;
-    int half = (int)it->second.size() / 2;
-    float sum = 0.0f;
-    for (int i = 0; i < half; i++) sum += neurons_[it->second[i]].output;
-    return half > 0 ? sum / (float)half : 0.0f;
+float BrainNetwork::get_dn_vnc_forward() const {
+    float sum = 0.0f; int cnt = 0;
+    for (const auto& n : neurons_)
+        if (n.type == NeuronType::DNVNC && n.compartment == "DNVNC_FWD")
+            { sum += n.output; cnt++; }
+    return cnt > 0 ? sum / (float)cnt : 0.0f;
 }
 
-float BrainNetwork::get_dn_vnc_right_activity() const {
-    auto it = type_indices_.find(NeuronType::DNVNC);
-    if (it == type_indices_.end() || it->second.empty()) return 0.0f;
-    int half = (int)it->second.size() / 2;
-    float sum = 0.0f;
-    for (int i = half; i < (int)it->second.size(); i++)
-        sum += neurons_[it->second[i]].output;
-    return (it->second.size() - half) > 0
-           ? sum / (float)(it->second.size() - half) : 0.0f;
+float BrainNetwork::get_dn_vnc_left_turn() const {
+    float sum = 0.0f; int cnt = 0;
+    for (const auto& n : neurons_)
+        if (n.type == NeuronType::DNVNC && n.compartment == "DNVNC_LTL")
+            { sum += n.output; cnt++; }
+    return cnt > 0 ? sum / (float)cnt : 0.0f;
+}
+
+float BrainNetwork::get_dn_vnc_right_turn() const {
+    float sum = 0.0f; int cnt = 0;
+    for (const auto& n : neurons_)
+        if (n.type == NeuronType::DNVNC && n.compartment == "DNVNC_LTR")
+            { sum += n.output; cnt++; }
+    return cnt > 0 ? sum / (float)cnt : 0.0f;
+}
+
+float BrainNetwork::get_dn_vnc_backward() const {
+    float sum = 0.0f; int cnt = 0;
+    for (const auto& n : neurons_)
+        if (n.type == NeuronType::DNVNC && n.compartment == "DNVNC_BWD")
+            { sum += n.output; cnt++; }
+    return cnt > 0 ? sum / (float)cnt : 0.0f;
 }
 
 // ===========================================================================
-// reset — Réinitialise complètement le réseau
+// reset — Réinitialise complètement le réseau avec de nouvelles valeurs
 //
-//   Remet tous les neurones à zéro (V, output, traces).
-//   Remet les poids synaptiques à leurs valeurs initiales
-//   (retour à l'état de naissance, annule tout apprentissage).
+//   Contrairement à une simple remise à zéro, cette méthode reconstruit
+//   intégralement le réseau : nouveaux poids aléatoires, nouvelles
+//   connexions. C'est équivalent à redémarrer avec un nouveau cerveau.
+//
+//   Pour préserver la reproductibilité, le seed n'est pas modifié ;
+//   l'état du générateur aléatoire au moment de l'appel détermine
+//   la nouvelle configuration.
 // ===========================================================================
 void BrainNetwork::reset() {
-    for (auto& n : neurons_) {
-        n.V = 0.0f;
-        n.output = 0.0f;
-        n.refractory_timer = 0.0f;
-        n.is_active = false;
-    }
-    // Réinitialisation des poids synaptiques à leur valeur de naissance
-    for (auto& s : synapses_) {
-        s.weight = s.weight_initial;
-        s.pre_trace = 0.0f;
-        s.post_trace = 0.0f;
-    }
+    // Nettoyage complet des données
+    neurons_.clear();
+    synapses_.clear();
+    type_indices_.clear();
+    active_stimuli_.clear();
     time_ = 0.0f;
     current_step_ = 0;
-    active_stimuli_.clear();
+    stim_counter_ = 0;
+    // Reconstruction complète avec nouveaux poids aléatoires
+    build_network();
 }
