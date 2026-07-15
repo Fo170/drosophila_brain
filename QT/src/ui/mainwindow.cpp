@@ -205,9 +205,9 @@ QWidget* MainWindow::createLegend() {
         {QColor("#888888"), "Odeur neutre",         true},
         {QColor("#ffd700"), "Nourriture disponible",true},
         {QColor("#ff0000"), "Zone de danger",       true},
-        {QColor("#808080"), "Nourriture consumée",  true},
+        {QColor("#4d4d4d"), "Nourriture consumée",  true},
         {QColor("#cccccc"), "Obstacle",             true},
-        {QColor("#ffffff"), "Trajectoire parcourue",false},
+        {QColor("#666666"), "Trajectoire parcourue",false},
     };
 
     for (auto& e : entries) {
