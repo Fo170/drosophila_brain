@@ -310,24 +310,24 @@ world = VirtualWorld3D()
 **Monde virtuel :**
 | Couleur | Élément |
 |---------|---------|
-| <font color="#00ffff">#</font> `#00ffff` (cyan) | Larve (position courante) |
-| <font color="#00ff00">#</font> `#00ff00` (vert) | Odeur attractive |
-| <font color="#ff9900">#</font> `#ff9900` (orange) | Odeur aversive |
-| <font color="#888888">#</font> `#888888` (gris) | Odeur neutre |
-| <font color="#ffd700">#</font> `#ffd700` (jaune) | Nourriture disponible |
-| <font color="#ff0000">#</font> `#ff0000` (rouge) | Zone de danger |
-| <font color="#4d4d4d">#</font> `#4d4d4d` (marron) | Nourriture consumée |
-| <font color="#cccccc">#</font> `#cccccc` (gris clair) | Obstacle |
-| <font color="#666666">#</font> `#666666` (gris moyen) | Trajectoire parcourue |
+| <font color="#00ffff">`#00ffff`</font> (cyan) | Larve (position courante) |
+| <font color="#00ff00">`#00ff00`</font> (vert) | Odeur attractive |
+| <font color="#ff9900">`#ff9900`</font> (orange) | Odeur aversive |
+| <font color="#888888">`#888888`</font> (gris) | Odeur neutre |
+| <font color="#ffd700">`#ffd700`</font> (jaune) | Nourriture disponible |
+| <font color="#ff0000">`#ff0000`</font> (rouge) | Zone de danger |
+| <font color="#4d4d4d">`#4d4d4d`</font> (marron) | Nourriture consumée |
+| <font color="#cccccc">`#cccccc`</font> (gris clair) | Obstacle |
+| <font color="#666666">`#666666`</font> (gris moyen) | Trajectoire parcourue |
 
 **Courbes d'activité cérébrale :**
 | Couleur | Région |
 |---------|--------|
-| <font color="#ff6b6b">#</font> `#ff6b6b` (rouge) | Sensoriel (entrées) |
-| <font color="#48dbfb">#</font> `#48dbfb` (cyan) | KC (Mushroom Body) |
-| <font color="#ff9ff3">#</font> `#ff9ff3` (rose) | MBON (sorties MB) |
-| <font color="#54a0ff">#</font> `#54a0ff` (bleu) | DAN (dopamine) |
-| <font color="#1dd1a1">#</font> `#1dd1a1` (vert) | DN (moteur) |
+| <font color="#ff6b6b">`#ff6b6b`</font> (rouge) | Sensoriel (entrées) |
+| <font color="#48dbfb">`#48dbfb`</font> (cyan) | KC (Mushroom Body) |
+| <font color="#ff9ff3">`#ff9ff3`</font> (rose) | MBON (sorties MB) |
+| <font color="#54a0ff">`#54a0ff`</font> (bleu) | DAN (dopamine) |
+| <font color="#1dd1a1">`#1dd1a1`</font> (vert) | DN (moteur) |
 
 ## Tests
 
