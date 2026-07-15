@@ -229,10 +229,7 @@ void GLWidget::updateWorld(const VirtualWorld3D& world) {
         v.x = traj[i].x() - 25.0f;
         v.y = traj[i].y() - 25.0f;
         v.z = 0.0f;
-        float t = (float)i / (float)std::max(traj.size(), size_t(1));
-        v.r = 1.0f - t;
-        v.g = t;
-        v.b = 1.0f;
+        v.r = 0.4f; v.g = 0.4f; v.b = 0.4f;
         line_vertices_.push_back(v);
     }
 
