@@ -310,24 +310,24 @@ world = VirtualWorld3D()
 **Monde virtuel :**
 | Couleur | Élément |
 |---------|---------|
-| `#00ffff` (cyan) | Larve (position courante) |
-| `#00ff00` (vert) | Odeur attractive |
-| `#ff9900` (orange) | Odeur aversive |
-| `#888888` (gris) | Odeur neutre |
-| `#ffd700` (jaune) | Nourriture disponible |
-| `#ff0000` (rouge) | Zone de danger |
-| `#4d4d4d` (marron) | Nourriture consumée |
-| `#cccccc` (gris clair) | Obstacle |
-| `#666666` (gris moyen) | Trajectoire parcourue |
+| <span style="color:#00ffff">⬤</span> `#00ffff` | Larve (position courante) |
+| <span style="color:#00ff00">⬤</span> `#00ff00` | Odeur attractive |
+| <span style="color:#ff9900">⬤</span> `#ff9900` | Odeur aversive |
+| <span style="color:#888888">⬤</span> `#888888` | Odeur neutre |
+| <span style="color:#ffd700">⬤</span> `#ffd700` | Nourriture disponible |
+| <span style="color:#ff0000">⬤</span> `#ff0000` | Zone de danger |
+| <span style="color:#4d4d4d">⬤</span> `#4d4d4d` | Nourriture consumée |
+| <span style="color:#cccccc">⬤</span> `#cccccc` | Obstacle |
+| <span style="color:#666666">⬤</span> `#666666` | Trajectoire parcourue |
 
 **Courbes d'activité cérébrale :**
 | Couleur | Région |
 |---------|--------|
-| `#ff6b6b` (rouge) | Sensoriel (entrées) |
-| `#48dbfb` (cyan) | KC (Mushroom Body) |
-| `#ff9ff3` (rose) | MBON (sorties MB) |
-| `#54a0ff` (bleu) | DAN (dopamine) |
-| `#1dd1a1` (vert) | DN (moteur) |
+| <span style="color:#ff6b6b">⬤</span> `#ff6b6b` | Sensoriel (entrées) |
+| <span style="color:#48dbfb">⬤</span> `#48dbfb` | KC (Mushroom Body) |
+| <span style="color:#ff9ff3">⬤</span> `#ff9ff3` | MBON (sorties MB) |
+| <span style="color:#54a0ff">⬤</span> `#54a0ff` | DAN (dopamine) |
+| <span style="color:#1dd1a1">⬤</span> `#1dd1a1` | DN (moteur) |
 
 ## Tests
 
