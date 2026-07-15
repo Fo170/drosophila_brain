@@ -7,7 +7,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QMatrix4x4>
-#include <QVector3D>
+#include <QVector2D>
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <vector>
@@ -27,7 +27,6 @@ public:
     ~GLWidget();
 
     void updateWorld(const VirtualWorld3D& world);
-    void setCameraCenter(const Eigen::Vector3f& center);
 
 protected:
     void initializeGL() override;
@@ -39,10 +38,7 @@ protected:
     void wheelEvent(QWheelEvent* e) override;
 
 private:
-    void buildPointBuffer(const std::vector<GLVertex>& verts);
-    void buildLineBuffer(const std::vector<GLVertex>& verts);
-    QVector3D toQVec(const Eigen::Vector3f& v) const;
-    Eigen::Vector3f toEigen(const QVector3D& v) const;
+    QMatrix4x4 viewMatrix() const;
 
     QOpenGLShaderProgram* point_shader_ = nullptr;
     QOpenGLShaderProgram* line_shader_ = nullptr;
@@ -57,13 +53,11 @@ private:
     bool points_dirty_ = true;
     bool lines_dirty_ = true;
 
-    float camera_dist_ = 70.0f;
-    float camera_theta_ = 0.5f;
-    float camera_phi_ = 0.3f;
-    QPointF camera_target_{25, 25};
+    // Orthographic camera: top-down, fixed
+    float zoom_ = 60.0f;
+    QVector2D pan_{0.0f, 0.0f};
     QPoint last_mouse_pos_;
-    bool mouse_dragging_ = false;
-    bool orbiting_ = false;
+    bool dragging_ = false;
 };
 
 #endif

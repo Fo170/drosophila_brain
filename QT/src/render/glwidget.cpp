@@ -17,24 +17,16 @@ GLWidget::~GLWidget() {
     doneCurrent();
 }
 
-QVector3D GLWidget::toQVec(const Eigen::Vector3f& v) const {
-    return QVector3D(v.x(), v.y(), v.z());
-}
-
-Eigen::Vector3f GLWidget::toEigen(const QVector3D& v) const {
-    return Eigen::Vector3f(v.x(), v.y(), v.z());
-}
-
 static const char* POINT_VERT = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aColor;
-uniform mat4 uModelView;
-uniform mat4 uProjection;
+uniform mat4 uView;
+uniform mat4 uProj;
 uniform float uPointSize;
 out vec3 vColor;
 void main() {
-    gl_Position = uProjection * uModelView * vec4(aPos, 1.0);
+    gl_Position = uProj * uView * vec4(aPos, 1.0);
     gl_PointSize = uPointSize;
     vColor = aColor;
 }
@@ -57,11 +49,11 @@ static const char* LINE_VERT = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aColor;
-uniform mat4 uModelView;
-uniform mat4 uProjection;
+uniform mat4 uView;
+uniform mat4 uProj;
 out vec3 vColor;
 void main() {
-    gl_Position = uProjection * uModelView * vec4(aPos, 1.0);
+    gl_Position = uProj * uView * vec4(aPos, 1.0);
     vColor = aColor;
 }
 )";
@@ -123,28 +115,24 @@ void GLWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
 }
 
+QMatrix4x4 GLWidget::viewMatrix() const {
+    QMatrix4x4 view;
+    view.translate(-pan_.x(), -pan_.y(), 0.0f);
+    return view;
+}
+
 void GLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float aspect = (float)width() / (float)std::max(height(), 1);
+    float half_w = zoom_ * 0.5f;
+    float half_h = half_w / aspect;
+
     QMatrix4x4 proj;
-    proj.perspective(45.0f, aspect, 0.1f, 500.0f);
+    proj.ortho(-half_w, half_w, -half_h, half_h, -100.0f, 100.0f);
 
-    QMatrix4x4 view;
-    float cx = camera_target_.x();
-    float cy = camera_target_.y();
-    float cz = 10.0f;
-    float x = cx + camera_dist_ * std::sin(camera_theta_) * std::cos(camera_phi_);
-    float y = cy + camera_dist_ * std::cos(camera_theta_) * std::cos(camera_phi_);
-    float z = cz + camera_dist_ * std::sin(camera_phi_);
-    view.lookAt(QVector3D(x, y, z), QVector3D(cx, cy, cz), QVector3D(0, 0, 1));
+    QMatrix4x4 view = viewMatrix();
 
-    QMatrix4x4 model;
-    model.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-
-    QMatrix4x4 mv = view * model;
-
-    // Draw points
     if (points_dirty_ && !point_vertices_.empty()) {
         point_vbo_.bind();
         point_vbo_.allocate(point_vertices_.data(),
@@ -155,16 +143,15 @@ void GLWidget::paintGL() {
 
     if (point_shader_ && !point_vertices_.empty()) {
         point_shader_->bind();
-        point_shader_->setUniformValue("uModelView", mv);
-        point_shader_->setUniformValue("uProjection", proj);
-        point_shader_->setUniformValue("uPointSize", 8.0f);
+        point_shader_->setUniformValue("uView", view);
+        point_shader_->setUniformValue("uProj", proj);
+        point_shader_->setUniformValue("uPointSize", 10.0f);
         point_vao_.bind();
         glDrawArrays(GL_POINTS, 0, (int)point_vertices_.size());
         point_vao_.release();
         point_shader_->release();
     }
 
-    // Draw lines
     if (lines_dirty_ && !line_vertices_.empty()) {
         line_vbo_.bind();
         line_vbo_.allocate(line_vertices_.data(),
@@ -175,13 +162,30 @@ void GLWidget::paintGL() {
 
     if (line_shader_ && !line_vertices_.empty()) {
         line_shader_->bind();
-        line_shader_->setUniformValue("uModelView", mv);
-        line_shader_->setUniformValue("uProjection", proj);
+        line_shader_->setUniformValue("uView", view);
+        line_shader_->setUniformValue("uProj", proj);
         line_vao_.bind();
         glDrawArrays(GL_LINE_STRIP, 0, (int)line_vertices_.size());
         line_vao_.release();
         line_shader_->release();
     }
+
+    // Draw world border
+    glUseProgram(0);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-half_w, half_w, -half_h, half_h, -100, 100);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-pan_.x(), -pan_.y(), 0);
+
+    glColor3f(0.2f, 0.2f, 0.3f);
+    glBegin(GL_LINE_LOOP);
+    glVertex3f(-25.0f, -25.0f, 0);
+    glVertex3f( 25.0f, -25.0f, 0);
+    glVertex3f( 25.0f,  25.0f, 0);
+    glVertex3f(-25.0f,  25.0f, 0);
+    glEnd();
 }
 
 void GLWidget::updateWorld(const VirtualWorld3D& world) {
@@ -192,48 +196,39 @@ void GLWidget::updateWorld(const VirtualWorld3D& world) {
         GLVertex v;
         v.x = pos.x() - 25.0f;
         v.y = pos.y() - 25.0f;
-        v.z = pos.z() - 10.0f;
+        v.z = 0.0f;
         v.r = r; v.g = g; v.b = b;
         point_vertices_.push_back(v);
     };
 
-    // Larva
     addPoint(world.insect_pos(), 0.0f, 1.0f, 1.0f);
 
-    // Odor sources
     for (const auto& odor : world.odor_sources()) {
-        float r = 0, g = 0, b = 0;
+        float r, g, b;
         switch (odor.type) {
-            case 0: r=0; g=1; b=0; break;     // attractive = green
-            case 1: r=1; g=0.5; b=0; break;   // aversive = orange
-            default: r=0.5; g=0.5; b=0.5; break; // neutral = gray
+            case 0: r=0; g=1; b=0; break;
+            case 1: r=1; g=0.5; b=0; break;
+            default: r=0.5; g=0.5; b=0.5; break;
         }
         addPoint(odor.pos, r, g, b);
     }
 
-    // Food sources
     for (const auto& food : world.food_sources()) {
-        if (food.consumed)
-            addPoint(food.pos, 0.3f, 0.3f, 0.3f);
-        else
-            addPoint(food.pos, 1.0f, 0.84f, 0.0f);
+        addPoint(food.pos, food.consumed ? 0.3f : 1.0f, food.consumed ? 0.3f : 0.84f, food.consumed ? 0.3f : 0.0f);
     }
 
-    // Threat zones
     for (const auto& threat : world.threat_zones())
         addPoint(threat.pos, 1.0f, 0.0f, 0.0f);
 
-    // Obstacles
     for (const auto& obs : world.obstacles())
         addPoint(obs.pos, 0.8f, 0.8f, 0.8f);
 
-    // Trajectory line
     const auto& traj = world.trajectory();
     for (size_t i = 0; i < traj.size(); i++) {
         GLVertex v;
         v.x = traj[i].x() - 25.0f;
         v.y = traj[i].y() - 25.0f;
-        v.z = traj[i].z() - 10.0f;
+        v.z = 0.0f;
         float t = (float)i / (float)std::max(traj.size(), size_t(1));
         v.r = 1.0f - t;
         v.g = t;
@@ -243,43 +238,31 @@ void GLWidget::updateWorld(const VirtualWorld3D& world) {
 
     points_dirty_ = true;
     lines_dirty_ = true;
-
-    camera_target_ = QPointF(world.insect_pos().x(), world.insect_pos().y());
-
     update();
-}
-
-void GLWidget::setCameraCenter(const Eigen::Vector3f& center) {
-    camera_target_ = QPointF(center.x(), center.y());
 }
 
 void GLWidget::mousePressEvent(QMouseEvent* e) {
     last_mouse_pos_ = e->pos();
-    if (e->button() == Qt::LeftButton) orbiting_ = true;
-    mouse_dragging_ = true;
+    dragging_ = true;
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent* e) {
-    if (!mouse_dragging_) return;
-    float dx = (float)(e->pos().x() - last_mouse_pos_.x()) * 0.01f;
-    float dy = (float)(e->pos().y() - last_mouse_pos_.y()) * 0.01f;
-    if (orbiting_) {
-        camera_theta_ -= dx;
-        camera_phi_ = std::clamp(camera_phi_ + dy, -1.5f, 1.5f);
-    } else {
-        camera_target_ += QPointF(-dx * camera_dist_ * 0.01f, dy * camera_dist_ * 0.01f);
-    }
+    if (!dragging_) return;
+    float aspect = (float)width() / (float)std::max(height(), 1);
+    float scale = zoom_ / (float)std::max(height(), 1);
+    float dx = (float)(e->pos().x() - last_mouse_pos_.x()) * scale;
+    float dy = (float)(e->pos().y() - last_mouse_pos_.y()) * scale;
+    pan_ -= QVector2D(dx, -dy);
     last_mouse_pos_ = e->pos();
     update();
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent*) {
-    mouse_dragging_ = false;
-    orbiting_ = false;
+    dragging_ = false;
 }
 
 void GLWidget::wheelEvent(QWheelEvent* e) {
-    camera_dist_ *= (1.0f + e->angleDelta().y() * 0.001f);
-    camera_dist_ = std::clamp(camera_dist_, 10.0f, 200.0f);
+    zoom_ *= (1.0f - e->angleDelta().y() * 0.002f);
+    zoom_ = std::clamp(zoom_, 10.0f, 200.0f);
     update();
 }
