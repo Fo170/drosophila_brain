@@ -310,24 +310,24 @@ world = VirtualWorld3D()
 **Monde virtuel :**
 | Couleur | Élément |
 |---------|---------|
-| <span style="color:#00ffff">#</span> `#00ffff` (cyan) | Larve (position courante) |
-| <span style="color:#00ff00">#</span> `#00ff00` (vert) | Odeur attractive |
-| <span style="color:#ff9900">#</span> `#ff9900` (orange) | Odeur aversive |
-| <span style="color:#888888">#</span> `#888888` (gris) | Odeur neutre |
-| <span style="color:#ffd700">#</span> `#ffd700` (jaune) | Nourriture disponible |
-| <span style="color:#ff0000">#</span> `#ff0000` (rouge) | Zone de danger |
-| <span style="color:#4d4d4d">#</span> `#4d4d4d` (marron) | Nourriture consumée |
-| <span style="color:#cccccc">#</span> `#cccccc` (gris clair) | Obstacle |
-| <span style="color:#666666">#</span> `#666666` (gris moyen) | Trajectoire parcourue |
+| <font color="#00ffff">#</font> `#00ffff` (cyan) | Larve (position courante) |
+| <font color="#00ff00">#</font> `#00ff00` (vert) | Odeur attractive |
+| <font color="#ff9900">#</font> `#ff9900` (orange) | Odeur aversive |
+| <font color="#888888">#</font> `#888888` (gris) | Odeur neutre |
+| <font color="#ffd700">#</font> `#ffd700` (jaune) | Nourriture disponible |
+| <font color="#ff0000">#</font> `#ff0000` (rouge) | Zone de danger |
+| <font color="#4d4d4d">#</font> `#4d4d4d` (marron) | Nourriture consumée |
+| <font color="#cccccc">#</font> `#cccccc` (gris clair) | Obstacle |
+| <font color="#666666">#</font> `#666666` (gris moyen) | Trajectoire parcourue |
 
 **Courbes d'activité cérébrale :**
 | Couleur | Région |
 |---------|--------|
-| <span style="color:#ff6b6b">#</span> `#ff6b6b` (rouge) | Sensoriel (entrées) |
-| <span style="color:#48dbfb">#</span> `#48dbfb` (cyan) | KC (Mushroom Body) |
-| <span style="color:#ff9ff3">#</span> `#ff9ff3` (rose) | MBON (sorties MB) |
-| <span style="color:#54a0ff">#</span> `#54a0ff` (bleu) | DAN (dopamine) |
-| <span style="color:#1dd1a1">#</span> `#1dd1a1` (vert) | DN (moteur) |
+| <font color="#ff6b6b">#</font> `#ff6b6b` (rouge) | Sensoriel (entrées) |
+| <font color="#48dbfb">#</font> `#48dbfb` (cyan) | KC (Mushroom Body) |
+| <font color="#ff9ff3">#</font> `#ff9ff3` (rose) | MBON (sorties MB) |
+| <font color="#54a0ff">#</font> `#54a0ff` (bleu) | DAN (dopamine) |
+| <font color="#1dd1a1">#</font> `#1dd1a1` (vert) | DN (moteur) |
 
 ## Tests
 
