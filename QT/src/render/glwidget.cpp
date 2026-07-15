@@ -256,7 +256,7 @@ void GLWidget::paintGL() {
         line_shader_->release();
     }
 
-    // --- Bordure à 95% de la zone visible ---
+    // --- Bordure à 98% de la zone visible ---
     glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -265,8 +265,8 @@ void GLWidget::paintGL() {
     glLoadIdentity();
     glTranslatef(-pan_.x(), -pan_.y(), 0);
 
-    float bw = half_w * 0.95f;
-    float bh = half_h * 0.95f;
+    float bw = half_w * 0.98f;
+    float bh = half_h * 0.98f;
     glColor3f(0.2f, 0.2f, 0.3f);
     glBegin(GL_LINE_LOOP);
     glVertex3f(-bw, -bh, 0);

@@ -54,7 +54,7 @@ private:
     bool lines_dirty_ = true;
 
     // Orthographic camera: top-down, fixed view
-    float zoom_ = 60.0f;
+    float zoom_ = 80.0f;
     QVector2D pan_{0.0f, 0.0f};
     QPoint last_mouse_pos_;
     bool dragging_ = false;

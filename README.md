@@ -305,11 +305,29 @@ world = VirtualWorld3D()
 # La larve se déplace selon les commandes motrices du cerveau
 ```
 
-Entités visibles :
-- 🟢 Sources d'odeur (vert, transparent)
-- 🟡 Nourriture (jaune)
-- 🔴 Zones de danger (rouge)
-- 🔵 Trajectoire de la larve (cyan)
+### Légende des couleurs (C++ Qt6)
+
+**Monde virtuel :**
+| Couleur | Élément |
+|---------|---------|
+| `#00ffff` (cyan) | Larve (position courante) |
+| `#00ff00` (vert) | Odeur attractive |
+| `#ff9900` (orange) | Odeur aversive |
+| `#888888` (gris) | Odeur neutre |
+| `#ffd700` (jaune) | Nourriture disponible |
+| `#ff0000` (rouge) | Zone de danger |
+| `#4d4d4d` (marron) | Nourriture consumée |
+| `#cccccc` (gris clair) | Obstacle |
+| `#666666` (gris moyen) | Trajectoire parcourue |
+
+**Courbes d'activité cérébrale :**
+| Couleur | Région |
+|---------|--------|
+| `#ff6b6b` (rouge) | Sensoriel (entrées) |
+| `#48dbfb` (cyan) | KC (Mushroom Body) |
+| `#ff9ff3` (rose) | MBON (sorties MB) |
+| `#54a0ff` (bleu) | DAN (dopamine) |
+| `#1dd1a1` (vert) | DN (moteur) |
 
 ## Tests
 
