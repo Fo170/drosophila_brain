@@ -6,12 +6,7 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QGroupBox>
-#include <QFrame>
 #include <QLabel>
-#include <QPixmap>
-#include <QPainter>
-#include <QApplication>
 
 // ===========================================================================
 // MainWindow : Fenêtre principale de l'application
@@ -37,6 +32,7 @@ MainWindow::MainWindow(QWidget* parent)
 {
     setWindowTitle("Drosophila Brain Simulator");
     resize(1400, 900);
+    setFixedSize(1400, 900);
 
     // Création du cerveau (3016 neurones, 548k synapses) et du monde 3D
     // Le seed 42 garantit la reproductibilité des expériences
@@ -57,291 +53,95 @@ MainWindow::~MainWindow() {
     delete world_;
 }
 
-// Style des groupes (cadres avec titre)
-static const char* GROUP_STYLE =
-    "QGroupBox { color: #58a6ff; font: bold 10px; border: 1px solid #30363d;"
-    "border-radius: 4px; margin-top: 12px; padding-top: 14px; }"
-    "QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }";
-
 // ===========================================================================
-// setupUI — Construction de l'interface graphique
+// setupUI — Interface minimale plein écran
 //
-//   Organisation :
-//     ┌──────────────────────────────┬──────────────────────┐
-//     │           Vue 3D             │  Simulation (infos)  │
-//     │          (OpenGL)            ├──────────────────────┤
-//     │                              │  Contrôles           │
-//     ├──────────────────────────────├──────────────────────┤
-//     │     Activité cérébrale       │  Stimuli             │
-//     │        (courbes)             ├──────────────────────┤
-//     │                              │  Légende             │
-//     └──────────────────────────────┴──────────────────────┘
+//   La fenêtre est fixe (1400×900). La vue OpenGL occupe tout l'espace,
+//   avec une barre de contrôles fine en haut et le graphique en bas.
 // ===========================================================================
 void MainWindow::setupUI() {
     auto* central = new QWidget(this);
     setCentralWidget(central);
-    auto* main_layout = new QHBoxLayout(central);
-    main_layout->setContentsMargins(4, 4, 4, 4);
-    main_layout->setSpacing(4);
+    auto* main_layout = new QVBoxLayout(central);
+    main_layout->setContentsMargins(0, 0, 0, 0);
+    main_layout->setSpacing(0);
 
-    // ---- Panneau gauche : vue 3D + graphique d'activité ----
-    auto* left_panel = new QWidget();
-    auto* left_layout = new QVBoxLayout(left_panel);
-    left_layout->setContentsMargins(0, 0, 0, 0);
-    left_layout->setSpacing(4);
+    // Barre de contrôles (haute de 28px, fond sombre)
+    auto* ctrl_bar = new QWidget();
+    ctrl_bar->setFixedHeight(28);
+    ctrl_bar->setStyleSheet(
+        "background:#161b22; border-bottom:1px solid #30363d;");
+    auto* ctrl_layout = new QHBoxLayout(ctrl_bar);
+    ctrl_layout->setContentsMargins(8, 0, 8, 0);
 
-    gl_widget_ = new GLWidget();
-    brain_chart_ = new BrainChart();
-    left_layout->addWidget(gl_widget_, 3);   // 3/4 de la hauteur
-    left_layout->addWidget(brain_chart_, 1); // 1/4 de la hauteur
+    QString btn_st =
+        "QPushButton{background:#21262d;color:#c9d1d9;border:1px solid "
+        "#30363d;border-radius:3px;padding:2px 10px;font:9px monospace;}"
+        "QPushButton:hover{background:#30363d;}";
 
-    // ---- Panneau droit : infos, contrôles, stimuli, légende ----
-    auto* right_panel = new QWidget();
-    right_panel->setFixedWidth(320);
-    auto* right_layout = new QVBoxLayout(right_panel);
-    right_layout->setContentsMargins(0, 0, 0, 0);
-    right_layout->setSpacing(6);
+    pause_btn_ = new QPushButton(QString::fromUtf8("\u23F8"));
+    pause_btn_->setFixedSize(28, 22);
+    pause_btn_->setStyleSheet(btn_st);
+    ctrl_layout->addWidget(pause_btn_);
 
-    right_layout->addWidget(createInfoPanel());
-    right_layout->addWidget(createControlPanel());
-    right_layout->addWidget(createStimuliPanel());
-    right_layout->addWidget(createLegend());
-    right_layout->addStretch();
+    reset_btn_ = new QPushButton(QString::fromUtf8("\u21BA"));
+    reset_btn_->setFixedSize(28, 22);
+    reset_btn_->setStyleSheet(btn_st);
+    ctrl_layout->addWidget(reset_btn_);
 
-    main_layout->addWidget(left_panel, 1);
-    main_layout->addWidget(right_panel);
-}
+    ctrl_layout->addSpacing(12);
 
-// ===========================================================================
-// createInfoPanel — Panneau d'informations de la simulation
-//   Affiche en temps réel : temps, position, vitesse, activité, stats
-// ===========================================================================
-QWidget* MainWindow::createInfoPanel() {
-    auto* group = new QGroupBox("Simulation");
-    group->setStyleSheet(GROUP_STYLE);
-    auto* layout = new QVBoxLayout(group);
-    layout->setSpacing(3);
+    auto* spd_lbl = new QLabel("V:");
+    spd_lbl->setStyleSheet("color:#8b949e;font:9px monospace;");
+    ctrl_layout->addWidget(spd_lbl);
 
-    auto make_row = [&](const QString& label, QLabel*& out) {
-        auto* row = new QHBoxLayout();
-        auto* lbl = new QLabel(label);
-        lbl->setStyleSheet("color: #8b949e; font: 9px monospace;");
-        out = new QLabel("—");
-        out->setStyleSheet("color: #00ff88; font: 9px monospace;");
-        row->addWidget(lbl);
-        row->addWidget(out, 1, Qt::AlignRight);
-        layout->addLayout(row);
-    };
-
-    make_row("Temps:",         time_label_);
-    make_row("Position:",      pos_label_);
-    make_row("Vitesse:",       speed_label_);
-    make_row("Actifs:",        active_label_);
-    make_row("Act. moyenne:",  mean_act_label_);
-    make_row("Nourriture:",    food_label_);
-    make_row("Menaces:",       threat_label_);
-    make_row("Distance:",      dist_label_);
-    make_row("DAN moyen:",     dan_label_);
-    make_row("Événement:",     event_label_);
-
-    return group;
-}
-
-// ===========================================================================
-// createControlPanel — Boutons pause/reset et curseur de vitesse
-//   Le curseur "Vitesse" contrôle steps_per_tick (1-100).
-//   À 1 : la simulation est au ralenti (~1 pas par frame)
-//   À 100 : la simulation est accélérée (~100 pas par frame)
-// ===========================================================================
-QWidget* MainWindow::createControlPanel() {
-    auto* group = new QGroupBox("Contrôles");
-    group->setStyleSheet(GROUP_STYLE);
-    auto* layout = new QVBoxLayout(group);
-    layout->setSpacing(6);
-
-    // Boutons Pause / Reset
-    auto* btn_layout = new QHBoxLayout();
-    pause_btn_ = new QPushButton(QString::fromUtf8("\u23F8 Pause"));
-    reset_btn_ = new QPushButton(QString::fromUtf8("\u21BA Reset"));
-    QString btn_style =
-        "QPushButton { background: #21262d; color: white;"
-        "border: 1px solid #30363d;"
-        "border-radius: 4px; padding: 6px 16px; font: bold 10px; }"
-        "QPushButton:hover { background: #30363d; }";
-    pause_btn_->setStyleSheet(btn_style);
-    reset_btn_->setStyleSheet(btn_style);
-    btn_layout->addWidget(pause_btn_);
-    btn_layout->addWidget(reset_btn_);
-    layout->addLayout(btn_layout);
-
-    // Curseur de vitesse
-    auto* speed_layout = new QHBoxLayout();
-    auto* speed_lbl = new QLabel("Vitesse:");
-    speed_lbl->setStyleSheet("color: #8b949e; font: 9px monospace;");
     speed_slider_ = new QSlider(Qt::Horizontal);
     speed_slider_->setRange(1, 100);
     speed_slider_->setValue(steps_per_tick_);
+    speed_slider_->setFixedWidth(80);
     speed_slider_->setStyleSheet(
-        "QSlider::groove:horizontal { height: 6px;"
-        "background: #21262d; border-radius: 3px; }"
-        "QSlider::handle:horizontal { background: #58a6ff;"
-        "width: 14px; border-radius: 7px; margin: -4px 0; }"
-        "QSlider::sub-page:horizontal { background: #58a6ff;"
-        "border-radius: 3px; }");
+        "QSlider::groove:horizontal{height:4px;background:#21262d;"
+        "border-radius:2px;}"
+        "QSlider::handle:horizontal{background:#58a6ff;width:10px;"
+        "border-radius:5px;margin:-3px 0;}"
+        "QSlider::sub-page:horizontal{background:#58a6ff;border-radius:2px;}");
+    ctrl_layout->addWidget(speed_slider_);
+
     speed_label_val_ = new QLabel(QString::number(steps_per_tick_));
-    speed_label_val_->setStyleSheet("color: #00ff88; font: 9px monospace;");
-    speed_layout->addWidget(speed_lbl);
-    speed_layout->addWidget(speed_slider_, 1);
-    speed_layout->addWidget(speed_label_val_);
-    layout->addLayout(speed_layout);
+    speed_label_val_->setStyleSheet("color:#00ff88;font:9px monospace;");
+    ctrl_layout->addWidget(speed_label_val_);
 
-    connect(pause_btn_, &QPushButton::clicked,
-            this, &MainWindow::togglePause);
-    connect(reset_btn_, &QPushButton::clicked,
-            this, &MainWindow::resetSimulation);
-    connect(speed_slider_, &QSlider::valueChanged,
-            this, &MainWindow::setSpeed);
+    ctrl_layout->addStretch();
 
-    return group;
-}
-
-// ===========================================================================
-// createStimuliPanel — Barres de progression pour les stimuli actuels
-//   Affiche en temps réel l'intensité des stimuli sensoriels :
-//   Olfaction, Gustation, Thermique, Visuel
-// ===========================================================================
-QWidget* MainWindow::createStimuliPanel() {
-    auto* group = new QGroupBox("Stimuli");
-    group->setStyleSheet(GROUP_STYLE);
-    auto* layout = new QVBoxLayout(group);
-    layout->setSpacing(4);
-
-    struct { const char* name; QColor color; } bars[] = {
-        {"Olfaction", QColor("#2ecc71")},
-        {"Gustation", QColor("#f1c40f")},
-        {"Thermique", QColor("#e74c3c")},
-        {"Visuel",    QColor("#3498db")}
+    // Infos en ligne sur la barre
+    auto make_info = [&](QLabel*& out) {
+        out = new QLabel("—");
+        out->setStyleSheet("color:#00ff88;font:9px monospace;"
+                           "padding:0 6px;");
+        ctrl_layout->addWidget(out);
     };
+    time_label_ = new QLabel();
+    time_label_->setStyleSheet("color:#8b949e;font:9px monospace;");
+    ctrl_layout->addWidget(time_label_);
+    make_info(pos_label_);
+    make_info(speed_label_);
+    make_info(active_label_);
+    make_info(event_label_);
 
-    for (int i = 0; i < 4; i++) {
-        auto* row = new QHBoxLayout();
+    main_layout->addWidget(ctrl_bar);
 
-        auto* lbl = new QLabel(bars[i].name);
-        lbl->setFixedWidth(65);
-        lbl->setStyleSheet("color: #8b949e; font: 9px monospace;");
+    // Vue OpenGL (remplit tout l'espace restant)
+    gl_widget_ = new GLWidget();
+    main_layout->addWidget(gl_widget_, 1);
 
-        auto* bar = new QProgressBar();
-        bar->setRange(0, 100);
-        bar->setValue(0);
-        bar->setTextVisible(false);
-        bar->setFixedHeight(12);
-        bar->setStyleSheet(
-            QString("QProgressBar { background: #21262d;"
-                    "border: 1px solid #30363d; border-radius: 3px; }"
-                    "QProgressBar::chunk { background: %1; border-radius: 2px; }")
-                .arg(bars[i].color.name()));
+    // Graphique cérébral (80px de haut)
+    brain_chart_ = new BrainChart();
+    brain_chart_->setFixedHeight(80);
+    main_layout->addWidget(brain_chart_);
 
-        auto* val = new QLabel("0.00");
-        val->setFixedWidth(35);
-        val->setStyleSheet("color: #00ff88; font: 8px monospace;");
-
-        row->addWidget(lbl);
-        row->addWidget(bar, 1);
-        row->addWidget(val);
-        layout->addLayout(row);
-
-        stim_bars_[i] = {bar, val};
-    }
-
-    return group;
-}
-
-// ===========================================================================
-// createLegend — Légende des couleurs du rendu 3D et des courbes
-// ===========================================================================
-QWidget* MainWindow::createLegend() {
-    auto* group = new QGroupBox("Légende");
-    group->setStyleSheet(GROUP_STYLE);
-    auto* layout = new QVBoxLayout(group);
-    layout->setSpacing(2);
-
-    // Points de la carte
-    struct { QColor color; const char* label; bool is_circle; } entries[] = {
-        {QColor("#00ffff"), "Larve (position)",        true},
-        {QColor("#00ff00"), "Odeur attractive",        true},
-        {QColor("#ff9900"), "Odeur aversive",          true},
-        {QColor("#888888"), "Odeur neutre",            true},
-        {QColor("#ffd700"), "Nourriture disponible",   true},
-        {QColor("#ff0000"), "Zone de danger",          true},
-        {QColor("#4d4d4d"), "Nourriture consumée",     true},
-        {QColor("#cccccc"), "Obstacle",                true},
-        {QColor("#666666"), "Trajectoire parcourue",   false},
-    };
-
-    for (auto& e : entries) {
-        auto* row = new QHBoxLayout();
-        row->setSpacing(6);
-
-        auto* swatch = new QLabel();
-        swatch->setFixedSize(12, 12);
-        if (e.is_circle) {
-            QPixmap px(12, 12);
-            px.fill(Qt::transparent);
-            QPainter p(&px);
-            p.setRenderHint(QPainter::Antialiasing);
-            p.setPen(Qt::NoPen);
-            p.setBrush(e.color);
-            p.drawEllipse(1, 1, 10, 10);
-            p.end();
-            swatch->setPixmap(px);
-        } else {
-            QPixmap px(12, 4);
-            px.fill(e.color);
-            swatch->setPixmap(px);
-        }
-
-        auto* lbl = new QLabel(e.label);
-        lbl->setStyleSheet("color: #c9d1d9; font: 9px monospace;");
-
-        row->addWidget(swatch);
-        row->addWidget(lbl, 1);
-        layout->addLayout(row);
-    }
-
-    // Séparateur
-    auto* sep = new QLabel("— Courbes activité cérébrale —");
-    sep->setStyleSheet("color: #8b949e; font: 8px monospace; padding: 4px 0;");
-    sep->setAlignment(Qt::AlignCenter);
-    layout->addWidget(sep);
-
-    // Courbes
-    struct { QColor color; const char* label; } traces[] = {
-        {QColor("#ff6b6b"), "Sensoriel (entrées)"},
-        {QColor("#48dbfb"), "KC (Mushroom Body)"},
-        {QColor("#ff9ff3"), "MBON (sorties MB)"},
-        {QColor("#54a0ff"), "DAN (dopamine)"},
-        {QColor("#1dd1a1"), "DN (moteur)"},
-    };
-
-    for (auto& t : traces) {
-        auto* row = new QHBoxLayout();
-        row->setSpacing(6);
-
-        auto* swatch = new QLabel();
-        swatch->setFixedSize(16, 4);
-        QPixmap px(16, 4);
-        px.fill(t.color);
-        swatch->setPixmap(px);
-
-        auto* lbl = new QLabel(t.label);
-        lbl->setStyleSheet("color: #c9d1d9; font: 8px monospace;");
-
-        row->addWidget(swatch);
-        row->addWidget(lbl, 1);
-        layout->addLayout(row);
-    }
-
-    return group;
+    connect(pause_btn_, &QPushButton::clicked, this, &MainWindow::togglePause);
+    connect(reset_btn_, &QPushButton::clicked, this, &MainWindow::resetSimulation);
+    connect(speed_slider_, &QSlider::valueChanged, this, &MainWindow::setSpeed);
 }
 
 // ===========================================================================
@@ -515,31 +315,11 @@ void MainWindow::updateInfoPanel() {
     NetworkState state = network_->get_state();
     auto pos = world_->insect_pos();
 
-    time_label_->setText(QString::number(sim_time_, 'f', 1) + " s");
-    pos_label_->setText(QString("(%1, %2, %3)")
-        .arg(pos.x(), 0, 'f', 1).arg(pos.y(), 0, 'f', 1)
-        .arg(pos.z(), 0, 'f', 1));
-    speed_label_->setText(QString::number(world_->insect_speed(), 'f', 3));
-    active_label_->setText(QString::number(state.n_active)
-        + " / " + QString::number(network_->neurons().size()));
-    mean_act_label_->setText(QString::number(state.mean_activity, 'f', 4));
-    food_label_->setText(QString::number(world_->food_consumed()));
-    threat_label_->setText(QString::number(world_->threats_encountered()));
-    dist_label_->setText(QString::number(world_->distance_traveled(), 'f', 1));
-
-    if (dan_count_ > 0) {
-        float dan_avg = dan_sum_ / dan_count_;
-        dan_label_->setText(QString::number(dan_avg, 'f', 4));
-    }
-
-    // Mise à jour des barres de stimuli
-    SensoryInput3D stim = world_->get_sensory_input_3d();
-    float vals[] = {stim.olfactory.total, stim.gustatory,
-                    stim.thermal, stim.visual};
-    for (int i = 0; i < 4; i++) {
-        stim_bars_[i].bar->setValue((int)(vals[i] * 100));
-        stim_bars_[i].value->setText(QString::number(vals[i], 'f', 2));
-    }
+    time_label_->setText(QString::number(sim_time_, 'f', 1) + "s");
+    QString pos_str = QString("(%1,%2)").arg(pos.x(),0,'f',1).arg(pos.y(),0,'f',1);
+    pos_label_->setText(pos_str);
+    speed_label_->setText(QString::number(world_->insect_speed(), 'f', 2));
+    active_label_->setText(QString::number(state.n_active));
 }
 
 // ===========================================================================

@@ -6,10 +6,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSlider>
-#include <QSplitter>
 #include <QWidget>
-#include <QProgressBar>
-#include <array>
 
 class GLWidget;
 class BrainChart;
@@ -31,10 +28,6 @@ private slots:
 private:
     void setupUI();
     void updateInfoPanel();
-    QWidget* createInfoPanel();
-    QWidget* createControlPanel();
-    QWidget* createStimuliPanel();
-    QWidget* createLegend();
 
     BrainNetwork* network_;
     VirtualWorld3D* world_;
@@ -46,18 +39,7 @@ private:
     QLabel* pos_label_;
     QLabel* speed_label_;
     QLabel* active_label_;
-    QLabel* mean_act_label_;
-    QLabel* food_label_;
-    QLabel* threat_label_;
-    QLabel* dist_label_;
     QLabel* event_label_;
-    QLabel* dan_label_;
-
-    struct StimBar {
-        QProgressBar* bar;
-        QLabel* value;
-    };
-    std::array<StimBar, 4> stim_bars_;
 
     QPushButton* pause_btn_;
     QPushButton* reset_btn_;
