@@ -4,20 +4,44 @@
 #include <numeric>
 #include <cassert>
 
+// ===========================================================================
+// Constructeur : initialise le générateur aléatoire et construit le réseau
+// ===========================================================================
 BrainNetwork::BrainNetwork(int seed) : rng_(seed) {
     build_network();
 }
 
+// ===========================================================================
+// sigmoid — Fonction d'activation biologique
+//   σ(V) = 1 / (1 + e^(-10(V-0.5)))
+//   Donne une sortie ∈ [0,1] avec une transition raide autour de V=0.5
+// ===========================================================================
 float BrainNetwork::sigmoid(float x) {
-    return 1.0f / (1.0f + std::exp(-SIGMOID_STEEPNESS * (x - V_THRESHOLD + SIGMOID_OFFSET)));
+    return 1.0f / (1.0f + std::exp(-SIGMOID_STEEPNESS
+                                    * (x - V_THRESHOLD + SIGMOID_OFFSET)));
 }
 
+// ===========================================================================
+// build_network — Crée les 3016 neurones avec leurs types et régions
+//
+// Ordre de création (important pour les IDs) :
+//   1. Sensoriels (ORN, GRN, PR, thermo, mechano, proprio, AN)
+//   2. Projection Neurons (PN)
+//   3. Mushroom Body (KC, MBON, DAN)
+//   4. Lateral Horn (LHN)
+//   5. Convergence (CN)
+//   6. Outputs (DNVNC, DNSEZ, RGN)
+//   7. Interneurons restants
+// ===========================================================================
 void BrainNetwork::build_network() {
     neurons_.reserve(N_NEURONS);
     int id = 0;
 
-    auto make_neurons = [&](int count, NeuronType type, const std::string& hemi,
-                            const std::string& comp_prefix, int group_size) {
+    // Lambda pour créer un groupe de neurones
+    auto make_neurons = [&](int count, NeuronType type,
+                            const std::string& hemi,
+                            const std::string& comp_prefix,
+                            int group_size) {
         for (int i = 0; i < count; i++) {
             Neuron n;
             n.id = id;
@@ -34,38 +58,71 @@ void BrainNetwork::build_network() {
         }
     };
 
-    auto make_grouped = [&](int total, NeuronType type, const std::string& prefix,
-                            int n_groups) {
+    auto make_grouped = [&](int total, NeuronType type,
+                            const std::string& prefix, int n_groups) {
         make_neurons(total, type, "left", prefix + "_",
                      std::max(1, total / n_groups));
     };
 
-    make_grouped(176, NeuronType::ORN,  "AL_glom",   N_ORN_GLOMERULI);
-    make_grouped(42,  NeuronType::GRN,  "GRN_zone",  N_GRN_ZONES);
-    make_grouped(29,  NeuronType::PR,   "VIS_col",   N_VISUAL_COLUMNS);
-    make_neurons(8,   NeuronType::THERMO,  "left", "thermo", 0);
-    make_neurons(10,  NeuronType::MECHANO, "left", "mechano", 0);
-    make_neurons(12,  NeuronType::PROPRIO, "left", "proprio", 0);
-    make_neurons(200, NeuronType::AN,   "left", "VNC_A1_", 50);
-    make_grouped(210, NeuronType::PN,   "PN",     30);
-    make_grouped(176, NeuronType::KC,   "MB_comp", N_KC_COMPARTMENTS);
-    make_grouped(48,  NeuronType::MBON, "MBON_type", N_MBON_TYPES);
-    make_grouped(30,  NeuronType::DAN,  "DAN_clust", N_DAN_CLUSTERS);
-    make_neurons(50,  NeuronType::LHN,  "left", "LH_", 10);
-    make_grouped(108, NeuronType::CN,   "CN",     20);
-    make_grouped(180, NeuronType::DNVNC,"DNVNC_",  30);
-    make_grouped(54,  NeuronType::DNSEZ,"DNSEZ_",  10);
-    make_grouped(184, NeuronType::RGN,  "RGN_",    30);
+    // ---- 1. Entrées sensorielles (477 neurones) ----
+    make_grouped(176, NeuronType::ORN,   "AL_glom",  N_ORN_GLOMERULI);
+    make_grouped(42,  NeuronType::GRN,   "GRN_zone", N_GRN_ZONES);
+    make_grouped(29,  NeuronType::PR,    "VIS_col",  N_VISUAL_COLUMNS);
+    make_neurons(8,   NeuronType::THERMO, "left", "thermo", 0);
+    make_neurons(10,  NeuronType::MECHANO,"left", "mechano", 0);
+    make_neurons(12,  NeuronType::PROPRIO,"left", "proprio", 0);
+    make_neurons(200, NeuronType::AN,    "left", "VNC_A1_", 50);
 
+    // ---- 2. Projection Neurons (210) ----
+    make_grouped(210, NeuronType::PN,    "PN",      30);
+
+    // ---- 3. Mushroom Body ----
+    make_grouped(176, NeuronType::KC,    "MB_comp", N_KC_COMPARTMENTS);
+    make_grouped(48,  NeuronType::MBON,  "MBON_type", N_MBON_TYPES);
+    make_grouped(30,  NeuronType::DAN,   "DAN_clust", N_DAN_CLUSTERS);
+
+    // ---- 4. Lateral Horn (50) ----
+    make_neurons(50,  NeuronType::LHN,   "left", "LH_", 10);
+
+    // ---- 5. Convergence Neurons (108) ----
+    make_grouped(108, NeuronType::CN,    "CN",     20);
+
+    // ---- 6. Descending Neurons ----
+    make_grouped(180, NeuronType::DNVNC, "DNVNC_", 30);
+    make_grouped(54,  NeuronType::DNSEZ, "DNSEZ_", 10);
+    make_grouped(184, NeuronType::RGN,   "RGN_",   30);
+
+    // ---- 7. Interneurons restants ----
     int remaining = N_NEURONS - (int)neurons_.size();
     if (remaining > 0) {
         make_grouped(remaining, NeuronType::IN, "IN_", 50);
     }
 
+    // Vérification du compte total
     assert((int)neurons_.size() == N_NEURONS);
+
+    // Création des connexions synaptiques
     create_synapses();
 }
 
+// ===========================================================================
+// create_synapses — Crée ~548000 synapses entre les neurones
+//
+//   Poids initial d'une synapse :
+//     weight = log1p(n_synapses) / log1p(50) × type_scale × WEIGHT_SCALE
+//              × variabilité_biologique(±20%)
+//
+//   Types de connexions par région :
+//     Sensoriel → PN : transmission sensorielle
+//     PN → KC : entrée du Mushroom Body (apprentissage)
+//     PN → LHN : voie innée (pas d'apprentissage)
+//     KC → MBON : sortie du MB
+//     MBON → CN : intégration des valeurs
+//     LHN → CN : valeurs innées
+//     CN → DN/RGN : commandes motrices
+//     MBON → DAN : feedback dopaminergique
+//     DAN → KC : modulation de l'apprentissage
+// ===========================================================================
 void BrainNetwork::create_synapses() {
     auto& orns  = type_indices_[NeuronType::ORN];
     auto& grns  = type_indices_[NeuronType::GRN];
@@ -86,13 +143,18 @@ void BrainNetwork::create_synapses() {
     auto& ins   = type_indices_[NeuronType::IN];
 
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-    std::uniform_int_distribution<int> n_syn(1, 10);
 
-    auto add_syn_lambda = [&](int pre, int post, SynapseType type, float prob,
-                              int min_n = 1, int max_n = 10) {
+    // Fonction pour ajouter une synapse avec poids initial aléatoire
+    auto add_syn_with_weight = [&](int pre, int post, SynapseType type,
+                                   float prob, int min_n = 1, int max_n = 10) {
         if (dist(rng_) < prob) {
+            // Nombre de synapses physiques (1-50)
             int ns = std::uniform_int_distribution<int>(min_n, max_n)(rng_);
+
+            // Poids basé sur le nombre de synapses (loi log)
             float norm = std::log1p((float)ns) / std::log1p(50.0f);
+
+            // Échelle selon le type de synapse
             float type_scale = 1.0f;
             switch (type) {
                 case SynapseType::A_D: type_scale = 1.0f; break;
@@ -100,6 +162,8 @@ void BrainNetwork::create_synapses() {
                 case SynapseType::D_D: type_scale = 0.5f; break;
                 case SynapseType::D_A: type_scale = 0.4f; break;
             }
+
+            // Variabilité biologique : ±20% aléatoire
             float var = std::uniform_real_distribution<float>(0.8f, 1.2f)(rng_);
             float w = norm * type_scale * WEIGHT_SCALE * var;
 
@@ -108,6 +172,8 @@ void BrainNetwork::create_synapses() {
             s.post_id = post;
             s.type = type;
             s.weight = std::max(0.0f, w);
+            s.weight_initial = s.weight;  // Sauvegarde pour l'oubli progressif
+            // Seules les synapses a-d et d-a sont plastiques (modifiables)
             s.plastic = (type == SynapseType::A_D || type == SynapseType::D_A);
             synapses_.push_back(s);
 
@@ -116,13 +182,17 @@ void BrainNetwork::create_synapses() {
         }
     };
 
-    auto connect_groups = [&](const std::vector<int>& pre, const std::vector<int>& post,
-                              SynapseType type, float prob, int mn = 1, int mx = 8) {
+    // Fonction pour connecter deux groupes de neurones
+    auto connect_groups = [&](const std::vector<int>& pre,
+                              const std::vector<int>& post,
+                              SynapseType type, float prob,
+                              int mn = 1, int mx = 8) {
         for (int p : pre)
             for (int q : post)
-                add_syn_lambda(p, q, type, prob, mn, mx);
+                add_syn_with_weight(p, q, type, prob, mn, mx);
     };
 
+    // Regroupe tous les neurones sensoriels
     auto all_sensory = [&]() -> std::vector<int> {
         std::vector<int> r;
         for (auto* v : {&orns, &grns, &prs, &therm, &mech, &prop, &ans})
@@ -130,30 +200,49 @@ void BrainNetwork::create_synapses() {
         return r;
     };
 
-    connect_groups(all_sensory(), pns, SynapseType::A_D, P_SENSORY_TO_PN, 1, 8);
+    // --- Feedforward : sensoriel → PN → MB/LH → CN → sortie ---
+    connect_groups(all_sensory(), pns, SynapseType::A_D,
+                   P_SENSORY_TO_PN, 1, 8);
     connect_groups(pns, kcs, SynapseType::A_D, P_PN_TO_MB, 1, 5);
     connect_groups(pns, lhns, SynapseType::A_D, P_PN_TO_LH, 1, 6);
     connect_groups(kcs, mbons, SynapseType::A_D, P_KC_TO_MBON, 1, 3);
     connect_groups(mbons, cns, SynapseType::A_D, P_MBON_TO_CN, 1, 8);
     connect_groups(lhns, cns, SynapseType::A_D, P_MBON_TO_CN * 0.8f, 1, 6);
 
+    // CN → Descending Neurons (commandes motrices)
     for (int cn : cns) {
-        for (int dn : dnvnc) add_syn_lambda(cn, dn, SynapseType::A_D, P_CN_TO_OUTPUT, 1, 10);
-        for (int dn : dnsez) add_syn_lambda(cn, dn, SynapseType::A_D, P_CN_TO_OUTPUT, 1, 10);
-        for (int rg : rgns) add_syn_lambda(cn, rg, SynapseType::A_D, P_CN_TO_OUTPUT * 0.5f, 1, 5);
+        for (int dn : dnvnc)
+            add_syn_with_weight(cn, dn, SynapseType::A_D,
+                                P_CN_TO_OUTPUT, 1, 10);
+        for (int dn : dnsez)
+            add_syn_with_weight(cn, dn, SynapseType::A_D,
+                                P_CN_TO_OUTPUT, 1, 10);
+        for (int rg : rgns)
+            add_syn_with_weight(cn, rg, SynapseType::A_D,
+                                P_CN_TO_OUTPUT * 0.5f, 1, 5);
     }
 
+    // --- Boucles récurrentes d'apprentissage ---
+    // MBON → DAN (feedback, type a-a : modulation)
     connect_groups(mbons, dans, SynapseType::A_A, P_MBON_TO_DAN, 1, 5);
+    // DAN → KC (modulation, type d-a : feedback dendro-axonique)
     connect_groups(dans, kcs, SynapseType::D_A, P_DAN_TO_KC, 1, 4);
 
+    // DN → Interneurons (efference copy : prédiction du mouvement)
     for (int dn : dnvnc)
         for (int i = 0; i < 100 && i < (int)ins.size(); i++)
-            add_syn_lambda(dn, ins[i], SynapseType::D_A, P_DN_FEEDBACK, 1, 3);
+            add_syn_with_weight(dn, ins[i], SynapseType::D_A,
+                                P_DN_FEEDBACK, 1, 3);
     for (int dn : dnsez)
         for (int i = 0; i < 100 && i < (int)ins.size(); i++)
-            add_syn_lambda(dn, ins[i], SynapseType::D_A, P_DN_FEEDBACK, 1, 3);
+            add_syn_with_weight(dn, ins[i], SynapseType::D_A,
+                                P_DN_FEEDBACK, 1, 3);
 }
 
+// ===========================================================================
+// add_synapse — Version simplifiée pour ajouter une synapse unique
+//   Utilisée quand on veut créer une synapse sans passer par connect_groups
+// ===========================================================================
 void BrainNetwork::add_synapse(int pre, int post, SynapseType type,
                                float prob, int min_n, int max_n) {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -175,26 +264,43 @@ void BrainNetwork::add_synapse(int pre, int post, SynapseType type,
         s.post_id = post;
         s.type = type;
         s.weight = std::max(0.0f, w);
+        s.weight_initial = s.weight;
         s.plastic = (type == SynapseType::A_D || type == SynapseType::D_A);
         synapses_.push_back(s);
     }
 }
 
-void BrainNetwork::apply_stimulus(const std::string& type, float intensity, float duration) {
+// ===========================================================================
+// apply_stimulus — Active un groupe de neurones sensoriels
+//
+//   Quand un stimulus est appliqué, tous les neurones du type correspondant
+//   sont activés avec l'intensité spécifiée (+ bruit gaussien).
+//
+//   La durée du stimulus est enregistrée ; après expiration, les neurones
+//   retournent à leur comportement par défaut (régis par l'équation de fuite).
+// ===========================================================================
+void BrainNetwork::apply_stimulus(const std::string& type, float intensity,
+                                   float duration) {
     std::string key = type + "_" + std::to_string(stim_counter_++);
     active_stimuli_[key] = {type, intensity, duration, time_};
 
+    // Mapping entre les noms de stimulus et les types de neurones
     static const std::unordered_map<std::string, NeuronType> s2t = {
-        {"olfactory", NeuronType::ORN}, {"gustatory", NeuronType::GRN},
-        {"visual", NeuronType::PR}, {"thermal", NeuronType::THERMO},
-        {"mechano", NeuronType::MECHANO}, {"proprioceptive", NeuronType::PROPRIO}
+        {"olfactory", NeuronType::ORN},
+        {"gustatory", NeuronType::GRN},
+        {"visual", NeuronType::PR},
+        {"thermal", NeuronType::THERMO},
+        {"mechano", NeuronType::MECHANO},
+        {"proprioceptive", NeuronType::PROPRIO}
     };
 
     auto it = s2t.find(type);
     if (it == s2t.end()) return;
+
     NeuronType nt = it->second;
     auto& idxs = type_indices_[nt];
 
+    // Activation des neurones avec bruit biologique
     std::normal_distribution<float> noise(0.0f, 0.1f);
     for (int idx : idxs) {
         neurons_[idx].V = intensity + noise(rng_);
@@ -202,6 +308,9 @@ void BrainNetwork::apply_stimulus(const std::string& type, float intensity, floa
     }
 }
 
+// ===========================================================================
+// update_stimuli — Supprime les stimuli dont la durée est expirée
+// ===========================================================================
 void BrainNetwork::update_stimuli(float dt) {
     std::vector<std::string> expired;
     for (auto& [key, stim] : active_stimuli_) {
@@ -212,18 +321,41 @@ void BrainNetwork::update_stimuli(float dt) {
         active_stimuli_.erase(k);
 }
 
+// ===========================================================================
+// step — Exécute un pas de simulation du réseau
+//
+//   Ordre des opérations :
+//     1. Nettoyage des stimuli expirés
+//     2. Calcul du courant synaptique entrant pour chaque neurone
+//        I_syn[post] = Σ (weight × type_factor × output_pre) sur toutes les synapses
+//     3. Mise à jour de chaque neurone (équation de fuite + sigmoïde)
+//     4. Mise à jour des traces STDP (pré/post)
+//     5. Le signal DAN et la plasticité sont gérés par apply_dan_signal()
+// ===========================================================================
 void BrainNetwork::step(float dt) {
     update_stimuli(dt);
 
+    // Facteurs multiplicatifs par type de synapse
+    // A_D=1.0, A_A=0.7, D_D=0.5, D_A=0.4
     static const float type_factor[] = {1.0f, 0.7f, 0.5f, 0.4f};
 
+    // ---- 1. Calcul du courant synaptique pour tous les neurones ----
+    //   On itère linéairement sur toutes les synapses (≈548k).
+    //   C'est l'opération la plus coûteuse du pas de simulation.
     std::vector<float> I_syn(neurons_.size(), 0.0f);
     for (const auto& s : synapses_) {
-        I_syn[s.post_id] += s.weight * type_factor[(int)s.type] * neurons_[s.pre_id].output;
+        I_syn[s.post_id] += s.weight
+                          * type_factor[(int)s.type]
+                          * neurons_[s.pre_id].output;
     }
 
+    // ---- 2. Mise à jour de chaque neurone ----
+    //   Équation : V += (-(V - V_rest)/τ + I_syn) × dt
+    //   Si le neurone est en période réfractaire, V est forcé à 0
+    //   et la sortie est presque nulle.
     for (auto& n : neurons_) {
         if (n.refractory_timer > 0.0f) {
+            // Période réfractaire : le neurone ne répond pas
             n.refractory_timer -= dt;
             n.V = V_REST * 0.5f;
             n.output = sigmoid(n.V);
@@ -231,11 +363,13 @@ void BrainNetwork::step(float dt) {
             continue;
         }
 
+        // Intégration temporelle (fuite + entrée synaptique)
         float dV = (-(n.V - V_REST) / TAU_MEMBRANE + I_syn[n.id]) * dt;
         n.V += dV;
         n.V = std::clamp(n.V, -2.0f, 2.0f);
         n.output = sigmoid(n.V);
 
+        // Détection d'activité (V > seuil + marge)
         if (n.V > V_THRESHOLD + 0.3f) {
             n.refractory_timer = TAU_REFRACTORY;
             n.is_active = true;
@@ -244,6 +378,10 @@ void BrainNetwork::step(float dt) {
         }
     }
 
+    // ---- 3. Mise à jour des traces STDP ----
+    //   Chaque trace décroît exponentiellement avec τ = STDP_WINDOW.
+    //   Quand le neurone pré (resp. post) est actif, sa trace augmente.
+    //   Ces traces servent à mesurer la corrélation pré-post pour STDP.
     for (auto& s : synapses_) {
         if (s.plastic) {
             s.pre_trace *= std::exp(-dt / STDP_WINDOW);
@@ -257,6 +395,63 @@ void BrainNetwork::step(float dt) {
     current_step_++;
 }
 
+// ===========================================================================
+// apply_dan_signal — Applique un signal dopaminergique (STDP modulé)
+//
+//   Règle des 3 facteurs :
+//     Δw = η × DAN × (pre_trace × post_trace)
+//
+//   - DAN > 0 (récompense) :
+//       Les synapses dont les traces pré et post sont élevées sont renforcées
+//       (potentiation hebbienne). La corrélation pré-post est positive.
+//
+//   - DAN < 0 (punition) :
+//       Les mêmes synapses sont affaiblies (×0.5 pour asymétrie biologique).
+//       La dépression est plus faible que la potentiation.
+//
+//   - DAN ≈ 0 (aucun signal) :
+//       Oubli progressif : le poids tend lentement vers sa valeur initiale.
+//
+//   Le poids est clampé entre 0.0 et MAX_WEIGHT (5×WEIGHT_SCALE = 0.5).
+//
+//   NOTE : Cette méthode itère sur TOUTES les synapses plastiques (≈400k).
+//   C'est volontairement coûteux car c'est le mécanisme d'apprentissage
+//   principal. En C++, l'opération prend ~1-2ms, ce qui est acceptable
+//   car elle n'est appelée que lors d'événements significatifs.
+// ===========================================================================
+void BrainNetwork::apply_dan_signal(float signal, float dt) {
+    // Ignorer les signaux trop faibles (bruit de fond)
+    if (std::abs(signal) < 0.0001f) return;
+
+    for (auto& s : synapses_) {
+        if (!s.plastic) continue;
+
+        // Corrélation pré-post (mesure de l'activité simultanée)
+        float correlation = s.pre_trace * s.post_trace;
+
+        float delta;
+        if (signal > 0.0f) {
+            // Récompense : potentiation des synapses corrélées
+            //   Δw = η × DAN × (pre_trace × post_trace)
+            delta = LEARNING_RATE * signal * correlation;
+        } else if (signal < 0.0f) {
+            // Punition : dépression des synapses corrélées
+            //   Facteur 0.5 pour asymétrie biologique
+            delta = LEARNING_RATE * signal * correlation * 0.5f;
+        } else {
+            // Oubli progressif (pas de signal)
+            delta = -0.001f * (s.weight - s.weight_initial) * dt;
+        }
+
+        // Application de la mise à jour avec clamping
+        s.weight += delta;
+        s.weight = std::clamp(s.weight, 0.0f, MAX_WEIGHT);
+    }
+}
+
+// ===========================================================================
+// get_region_activity — Calcule l'activité moyenne par région cérébrale
+// ===========================================================================
 RegionActivity BrainNetwork::get_region_activity() const {
     RegionActivity ra;
     auto avg = [&](NeuronType t) -> float {
@@ -267,9 +462,10 @@ RegionActivity BrainNetwork::get_region_activity() const {
         return sum / (float)it->second.size();
     };
 
-    ra.sensory = (avg(NeuronType::ORN) + avg(NeuronType::GRN) + avg(NeuronType::PR) +
-                  avg(NeuronType::THERMO) + avg(NeuronType::MECHANO) +
-                  avg(NeuronType::PROPRIO) + avg(NeuronType::AN)) / 7.0f;
+    ra.sensory = (avg(NeuronType::ORN) + avg(NeuronType::GRN)
+                + avg(NeuronType::PR) + avg(NeuronType::THERMO)
+                + avg(NeuronType::MECHANO) + avg(NeuronType::PROPRIO)
+                + avg(NeuronType::AN)) / 7.0f;
     ra.PN = avg(NeuronType::PN);
     ra.KC = avg(NeuronType::KC);
     ra.MBON = avg(NeuronType::MBON);
@@ -281,6 +477,9 @@ RegionActivity BrainNetwork::get_region_activity() const {
     return ra;
 }
 
+// ===========================================================================
+// get_state — Retourne l'état complet du réseau pour l'affichage
+// ===========================================================================
 NetworkState BrainNetwork::get_state() const {
     NetworkState s;
     s.time = time_;
@@ -294,6 +493,9 @@ NetworkState BrainNetwork::get_state() const {
     return s;
 }
 
+// ===========================================================================
+// n_active_neurons — Compte les neurones actifs (V > seuil)
+// ===========================================================================
 int BrainNetwork::n_active_neurons() const {
     int c = 0;
     for (auto& n : neurons_)
@@ -301,12 +503,24 @@ int BrainNetwork::n_active_neurons() const {
     return c;
 }
 
+// ===========================================================================
+// mean_activity — Moyenne des sorties de tous les neurones
+// ===========================================================================
 float BrainNetwork::mean_activity() const {
     float sum = 0.0f;
     for (auto& n : neurons_) sum += n.output;
     return sum / (float)neurons_.size();
 }
 
+// ===========================================================================
+// get_dn_vnc_left/right_activity — Activité motrice gauche/droite
+//
+//   Les DNVNC sont divisés en deux moitiés : gauche et droite.
+//   La différence d'activité entre les deux détermine le virage :
+//     - left > right → tourne à droite
+//     - right > left → tourne à gauche
+//   La somme des deux détermine la vitesse.
+// ===========================================================================
 float BrainNetwork::get_dn_vnc_left_activity() const {
     auto it = type_indices_.find(NeuronType::DNVNC);
     if (it == type_indices_.end() || it->second.empty()) return 0.0f;
@@ -321,10 +535,19 @@ float BrainNetwork::get_dn_vnc_right_activity() const {
     if (it == type_indices_.end() || it->second.empty()) return 0.0f;
     int half = (int)it->second.size() / 2;
     float sum = 0.0f;
-    for (int i = half; i < (int)it->second.size(); i++) sum += neurons_[it->second[i]].output;
-    return (it->second.size() - half) > 0 ? sum / (float)(it->second.size() - half) : 0.0f;
+    for (int i = half; i < (int)it->second.size(); i++)
+        sum += neurons_[it->second[i]].output;
+    return (it->second.size() - half) > 0
+           ? sum / (float)(it->second.size() - half) : 0.0f;
 }
 
+// ===========================================================================
+// reset — Réinitialise complètement le réseau
+//
+//   Remet tous les neurones à zéro (V, output, traces).
+//   Remet les poids synaptiques à leurs valeurs initiales
+//   (retour à l'état de naissance, annule tout apprentissage).
+// ===========================================================================
 void BrainNetwork::reset() {
     for (auto& n : neurons_) {
         n.V = 0.0f;
@@ -332,7 +555,9 @@ void BrainNetwork::reset() {
         n.refractory_timer = 0.0f;
         n.is_active = false;
     }
+    // Réinitialisation des poids synaptiques à leur valeur de naissance
     for (auto& s : synapses_) {
+        s.weight = s.weight_initial;
         s.pre_trace = 0.0f;
         s.post_trace = 0.0f;
     }
