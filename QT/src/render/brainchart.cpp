@@ -65,9 +65,10 @@ void BrainChart::paintEvent(QPaintEvent*) {
         p.drawLine(m, y, m + w, y);
     }
 
-    // Time window
-    float t_min = std::max(0.0f, max_time_ - 500.0f);
-    float t_range = std::max(max_time_ - t_min, 1.0f);
+    // Time window: use min/max of actual stored data
+    float t_min = history_.front().time;
+    float t_max = history_.back().time;
+    float t_range = std::max(t_max - t_min, 0.01f);
 
     auto get_x = [&](float t) -> float {
         return m + w * (t - t_min) / t_range;
