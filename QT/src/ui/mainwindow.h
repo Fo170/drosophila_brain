@@ -34,6 +34,7 @@ private:
     QWidget* createInfoPanel();
     QWidget* createControlPanel();
     QWidget* createStimuliPanel();
+    QWidget* createLegend();
 
     BrainNetwork* network_;
     VirtualWorld3D* world_;

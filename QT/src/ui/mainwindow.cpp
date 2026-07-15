@@ -8,12 +8,15 @@
 #include <QHBoxLayout>
 #include <QGroupBox>
 #include <QFrame>
+#include <QLabel>
+#include <QPixmap>
+#include <QPainter>
 #include <QApplication>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-    setWindowTitle("Drosophila Brain Simulator — 3D");
+    setWindowTitle("Drosophila Brain Simulator");
     resize(1400, 900);
 
     network_ = new BrainNetwork(42);
@@ -62,6 +65,7 @@ void MainWindow::setupUI() {
     right_layout->addWidget(createInfoPanel());
     right_layout->addWidget(createControlPanel());
     right_layout->addWidget(createStimuliPanel());
+    right_layout->addWidget(createLegend());
     right_layout->addStretch();
 
     main_layout->addWidget(left_panel, 1);
@@ -183,6 +187,89 @@ QWidget* MainWindow::createStimuliPanel() {
         layout->addLayout(row);
 
         stim_bars_[i] = {bar, val};
+    }
+
+    return group;
+}
+
+QWidget* MainWindow::createLegend() {
+    auto* group = new QGroupBox("Légende");
+    group->setStyleSheet(GROUP_STYLE);
+    auto* layout = new QVBoxLayout(group);
+    layout->setSpacing(2);
+
+    struct { QColor color; const char* label; bool is_circle; } entries[] = {
+        {QColor("#00ffff"), "Larve (position)",     true},
+        {QColor("#00ff00"), "Odeur attractive",     true},
+        {QColor("#ff9900"), "Odeur aversive",       true},
+        {QColor("#888888"), "Odeur neutre",         true},
+        {QColor("#ffd700"), "Nourriture disponible",true},
+        {QColor("#ff0000"), "Zone de danger",       true},
+        {QColor("#808080"), "Nourriture consumée",  true},
+        {QColor("#cccccc"), "Obstacle",             true},
+        {QColor("#ffffff"), "Trajectoire parcourue",false},
+    };
+
+    for (auto& e : entries) {
+        auto* row = new QHBoxLayout();
+        row->setSpacing(6);
+
+        auto* swatch = new QLabel();
+        swatch->setFixedSize(12, 12);
+        if (e.is_circle) {
+            QPixmap px(12, 12);
+            px.fill(Qt::transparent);
+            QPainter p(&px);
+            p.setRenderHint(QPainter::Antialiasing);
+            p.setPen(Qt::NoPen);
+            p.setBrush(e.color);
+            p.drawEllipse(1, 1, 10, 10);
+            p.end();
+            swatch->setPixmap(px);
+        } else {
+            QPixmap px(12, 4);
+            px.fill(e.color);
+            swatch->setPixmap(px);
+        }
+
+        auto* lbl = new QLabel(e.label);
+        lbl->setStyleSheet("color: #c9d1d9; font: 9px monospace;");
+
+        row->addWidget(swatch);
+        row->addWidget(lbl, 1);
+        layout->addLayout(row);
+    }
+
+    // Brain chart colors
+    auto* sep = new QLabel("— Courbes activité cérébrale —");
+    sep->setStyleSheet("color: #8b949e; font: 8px monospace; padding: 4px 0;");
+    sep->setAlignment(Qt::AlignCenter);
+    layout->addWidget(sep);
+
+    struct { QColor color; const char* label; } traces[] = {
+        {QColor("#ff6b6b"), "Sensoriel"},
+        {QColor("#48dbfb"), "KC (MB)"},
+        {QColor("#ff9ff3"), "MBON"},
+        {QColor("#54a0ff"), "DAN"},
+        {QColor("#1dd1a1"), "DN (moteur)"},
+    };
+
+    for (auto& t : traces) {
+        auto* row = new QHBoxLayout();
+        row->setSpacing(6);
+
+        auto* swatch = new QLabel();
+        swatch->setFixedSize(16, 4);
+        QPixmap px(16, 4);
+        px.fill(t.color);
+        swatch->setPixmap(px);
+
+        auto* lbl = new QLabel(t.label);
+        lbl->setStyleSheet("color: #c9d1d9; font: 8px monospace;");
+
+        row->addWidget(swatch);
+        row->addWidget(lbl, 1);
+        layout->addLayout(row);
     }
 
     return group;
