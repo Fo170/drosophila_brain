@@ -2,3 +2,8 @@
 __pycache__/
 *.pyc
 .DS_Store
+QT/build/
+*.o
+*.so
+moc_*.cpp
+*.moc
