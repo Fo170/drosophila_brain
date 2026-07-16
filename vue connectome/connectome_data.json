@@ -1,0 +1,391 @@
+{
+  "metadata": {
+    "species": "Drosophila melanogaster (larva)",
+    "reference": "Winding et al. 2023, Science 379(6636), eadd9330",
+    "neurons_total": 3016,
+    "synapses_total": 548000,
+    "regions_count": 11,
+    "neuron_types": 93,
+    "recurrence_rate": 0.41,
+    "hubs_io_learning_rate": 0.73,
+    "license": "CC-BY / Open Data"
+  },
+  "regions": [
+    {
+      "id": "AL",
+      "name": "Antennal Lobe",
+      "name_fr": "Lobe antennaire (AL)",
+      "neurons": 285,
+      "type": "sensory",
+      "position": {
+        "x": 0.25,
+        "y": 0.22
+      },
+      "color": "#f59e0b",
+      "description": "Traitement olfactif primaire. Organisation glomerulaire. Reception ORNs."
+    },
+    {
+      "id": "BO",
+      "name": "Bolwig Organ",
+      "name_fr": "Organes de Bolwig (BO)",
+      "neurons": 24,
+      "type": "sensory",
+      "position": {
+        "x": 0.75,
+        "y": 0.18
+      },
+      "color": "#38bdf8",
+      "description": "Photorecepteurs larvaires. Vision primitive et phototaxie negative."
+    },
+    {
+      "id": "CH",
+      "name": "Chordotonal Organ",
+      "name_fr": "Organes chordotonaux (CH)",
+      "neurons": 156,
+      "type": "sensory",
+      "position": {
+        "x": 0.12,
+        "y": 0.5
+      },
+      "color": "#10b981",
+      "description": "Mecanorecepteurs proprioceptifs et vibratoires. Corps sous-oesophagien."
+    },
+    {
+      "id": "MB",
+      "name": "Mushroom Body",
+      "name_fr": "Corps mushroom (MB)",
+      "neurons": 250,
+      "type": "integrator",
+      "position": {
+        "x": 0.48,
+        "y": 0.35
+      },
+      "color": "#f472b6",
+      "description": "Centre d'apprentissage et memoire olfactive. Kenyon cells + lobes."
+    },
+    {
+      "id": "LH",
+      "name": "Lateral Horn",
+      "name_fr": "Lobe lateral (LH)",
+      "neurons": 380,
+      "type": "integrator",
+      "position": {
+        "x": 0.32,
+        "y": 0.42
+      },
+      "color": "#a78bfa",
+      "description": "Integration multimodale post-AL. Decision comportementale olfactive."
+    },
+    {
+      "id": "SLP",
+      "name": "Superior Lateral Protocerebrum",
+      "name_fr": "Plaque supra-latérale (SLP)",
+      "neurons": 420,
+      "type": "integrator",
+      "position": {
+        "x": 0.68,
+        "y": 0.4
+      },
+      "color": "#8b5cf6",
+      "description": "Cortex associatif superieur. Integration visuo-mecano-olfactive."
+    },
+    {
+      "id": "SIP",
+      "name": "Superior Intermediate Protocerebrum",
+      "name_fr": "Plaque intermediaire (SIP)",
+      "neurons": 310,
+      "type": "integrator",
+      "position": {
+        "x": 0.52,
+        "y": 0.55
+      },
+      "color": "#6366f1",
+      "description": "Zone de transition. Relais entre centres sensoriels et moteurs."
+    },
+    {
+      "id": "CRE",
+      "name": "Crepine",
+      "name_fr": "Crete cerebrale (CRE)",
+      "neurons": 290,
+      "type": "integrator",
+      "position": {
+        "x": 0.38,
+        "y": 0.68
+      },
+      "color": "#ec4899",
+      "description": "Centre d'integration motrice superieure. Coordination comportementale."
+    },
+    {
+      "id": "SMP",
+      "name": "Superior Medial Protocerebrum",
+      "name_fr": "Plaque supra-mediane (SMP)",
+      "neurons": 340,
+      "type": "integrator",
+      "position": {
+        "x": 0.62,
+        "y": 0.68
+      },
+      "color": "#d946ef",
+      "description": "Reseau peptidergique et modulateur. Controle de l'etat interne."
+    },
+    {
+      "id": "INP",
+      "name": "Inferior Neuropils",
+      "name_fr": "Protuberance intercalaire (INP)",
+      "neurons": 180,
+      "type": "commissure",
+      "position": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "color": "#06b6d4",
+      "description": "Commissure interhemispherique majeure. 41% connexions recurrentes."
+    },
+    {
+      "id": "VNC",
+      "name": "Ventral Nerve Cord",
+      "name_fr": "Cordon nerveux ventral (VNC)",
+      "neurons": 381,
+      "type": "motor",
+      "position": {
+        "x": 0.5,
+        "y": 0.95
+      },
+      "color": "#ef4444",
+      "description": "Ganglions thoraciques/abdominaux. Motoneurones et pattern generators."
+    }
+  ],
+  "connections": [
+    {
+      "source": "AL",
+      "target": "LH",
+      "synapses": 28500,
+      "type": "feedforward",
+      "description": "Projection glomerulaire -> PN -> LH. Voie olfactive ascendante principale."
+    },
+    {
+      "source": "AL",
+      "target": "MB",
+      "synapses": 18200,
+      "type": "feedforward",
+      "description": "Projection neurons -> calyx du mushroom body. Apprentissage olfactif associatif."
+    },
+    {
+      "source": "BO",
+      "target": "SLP",
+      "synapses": 12400,
+      "type": "feedforward",
+      "description": "Voie visuelle laterale. Photorecepteurs -> cortex associatif visuel."
+    },
+    {
+      "source": "BO",
+      "target": "SIP",
+      "synapses": 6800,
+      "type": "feedforward",
+      "description": "Voie visuelle mediane. Integration visuo-motrice directe."
+    },
+    {
+      "source": "CH",
+      "target": "SLP",
+      "synapses": 15600,
+      "type": "feedforward",
+      "description": "Proprioception -> cortex associatif. Coordination posture et locomotion."
+    },
+    {
+      "source": "CH",
+      "target": "SIP",
+      "synapses": 9200,
+      "type": "feedforward",
+      "description": "Mecanoreception -> zone intermediaire. Reflexes rapides."
+    },
+    {
+      "source": "CH",
+      "target": "CRE",
+      "synapses": 7400,
+      "type": "feedforward",
+      "description": "Feedback proprioceptif au centre moteur superieur."
+    },
+    {
+      "source": "LH",
+      "target": "SLP",
+      "synapses": 22400,
+      "type": "associative",
+      "description": "Integration olfacto-visuelle. Decision comportementale multi-modale."
+    },
+    {
+      "source": "LH",
+      "target": "MB",
+      "synapses": 15800,
+      "type": "associative",
+      "description": "Feedback LH -> mushroom body. Modulation de la valence olfactive."
+    },
+    {
+      "source": "SLP",
+      "target": "SIP",
+      "synapses": 18600,
+      "type": "associative",
+      "description": "Cortex associatif -> zone de transition. Flux sensoriel integre."
+    },
+    {
+      "source": "SIP",
+      "target": "CRE",
+      "synapses": 14200,
+      "type": "associative",
+      "description": "Relais vers centre moteur superieur. Planification d'actions."
+    },
+    {
+      "source": "SIP",
+      "target": "SMP",
+      "synapses": 12800,
+      "type": "associative",
+      "description": "Modulation peptidergique de l'etat comportemental et motivationnel."
+    },
+    {
+      "source": "CRE",
+      "target": "SMP",
+      "synapses": 11600,
+      "type": "associative",
+      "description": "Coordination moteur-etat interne. Sequencement comportemental."
+    },
+    {
+      "source": "MB",
+      "target": "CRE",
+      "synapses": 9800,
+      "type": "associative",
+      "description": "Mushroom body -> centre moteur. Memoire a action."
+    },
+    {
+      "source": "MB",
+      "target": "SMP",
+      "synapses": 8200,
+      "type": "associative",
+      "description": "Modulation dopaminergique de l'etat interne par le MB."
+    },
+    {
+      "source": "LH",
+      "target": "AL",
+      "synapses": 12400,
+      "type": "recurrent",
+      "description": "Feedback central -> lobe antennaire. Modulation olfactive descendante (top-down)."
+    },
+    {
+      "source": "SLP",
+      "target": "BO",
+      "synapses": 4200,
+      "type": "recurrent",
+      "description": "Feedback visuel. Attention visuelle et modulation de la sensibilite."
+    },
+    {
+      "source": "CRE",
+      "target": "SIP",
+      "synapses": 9800,
+      "type": "recurrent",
+      "description": "Boucle moteur-sensorielle. Prediction motrice et efference copy."
+    },
+    {
+      "source": "SMP",
+      "target": "SIP",
+      "synapses": 7600,
+      "type": "recurrent",
+      "description": "Regulation homeostatique du traitement sensoriel."
+    },
+    {
+      "source": "MB",
+      "target": "MB",
+      "synapses": 15400,
+      "type": "recurrent",
+      "description": "Recurrence interne au mushroom body. Rappel, consolidation et generalisation."
+    },
+    {
+      "source": "CRE",
+      "target": "CRE",
+      "synapses": 8200,
+      "type": "recurrent",
+      "description": "Auto-regulation motrice. Sequencement et timing des actions."
+    },
+    {
+      "source": "INP",
+      "target": "AL",
+      "synapses": 8600,
+      "type": "commissure",
+      "description": "Communication interhemispherique olfactive. Comparaison bilaterale."
+    },
+    {
+      "source": "INP",
+      "target": "SLP",
+      "synapses": 11200,
+      "type": "commissure",
+      "description": "Integration bilaterale des senses. Fusion perceptive."
+    },
+    {
+      "source": "INP",
+      "target": "SIP",
+      "synapses": 9800,
+      "type": "commissure",
+      "description": "Coordination interhemispherique motrice. Synchronisation locomotrice."
+    },
+    {
+      "source": "INP",
+      "target": "CRE",
+      "synapses": 7400,
+      "type": "commissure",
+      "description": "Synchronisation des programmes moteurs bilateraux."
+    },
+    {
+      "source": "AL",
+      "target": "INP",
+      "synapses": 6200,
+      "type": "commissure",
+      "description": "Olfaction contralaterale. Detection de gradients spatiaux."
+    },
+    {
+      "source": "SLP",
+      "target": "INP",
+      "synapses": 7800,
+      "type": "commissure",
+      "description": "Associatif contralateral. Integration multi-modale bilaterale."
+    },
+    {
+      "source": "CRE",
+      "target": "VNC",
+      "synapses": 18600,
+      "type": "efferent",
+      "description": "Commande motrice descendante. Activation des pattern generators segmentaires."
+    },
+    {
+      "source": "SMP",
+      "target": "VNC",
+      "synapses": 12400,
+      "type": "efferent",
+      "description": "Modulation peptidergique de la locomotion et du rythme."
+    },
+    {
+      "source": "SIP",
+      "target": "VNC",
+      "synapses": 14200,
+      "type": "efferent",
+      "description": "Relais moteur direct. Reflexes rapides et corrections posturales."
+    },
+    {
+      "source": "INP",
+      "target": "VNC",
+      "synapses": 9800,
+      "type": "efferent",
+      "description": "Coordination locomotrice bilaterale. Alternance des pas."
+    },
+    {
+      "source": "VNC",
+      "target": "CH",
+      "synapses": 11200,
+      "type": "afferent",
+      "description": "Proprioception ascendante depuis les segments corporels."
+    },
+    {
+      "source": "VNC",
+      "target": "SIP",
+      "synapses": 8600,
+      "type": "afferent",
+      "description": "Feedback locomoteur au centre integrateur. Boucle fermee."
+    }
+  ]
+}

@@ -1,0 +1,403 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 1400 1000" 
+     width="1400" height="1000"
+     style="background:#0a0e17; font-family:'Inter',system-ui,sans-serif;">
+  <defs>
+    <marker id="arrow-feedforward" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-efferent" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ef4444" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-recurrent" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#f472b6" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-commissure" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#06b6d4" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-associative" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#a78bfa" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-afferent" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#10b981" opacity="0.7"/>
+    </marker>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- TITRE ET LEGENDE -->
+  <text x="700.0" y="40" text-anchor="middle" 
+        fill="#38bdf8" font-size="22" font-weight="700">
+    Connectome Larve Drosophila melanogaster
+  </text>
+  <text x="700.0" y="65" text-anchor="middle" 
+        fill="#64748b" font-size="13">
+    Vue d'ensemble complete · Winding et al. 2023 · 3 016 neurones · 548 000 synapses
+  </text>
+  <text x="30" y="100" fill="#e2e8f0" font-size="13" font-weight="600">Legende des faisceaux</text>
+    <rect x="30" y="120" width="20" height="3" rx="1.5" fill="#f59e0b" opacity="0.8"/>
+    <text x="58" y="123" fill="#94a3b8" font-size="11" dominant-baseline="middle">Sensoriel ↑</text>
+    <rect x="30" y="142" width="20" height="3" rx="1.5" fill="#ef4444" opacity="0.8"/>
+    <text x="58" y="145" fill="#94a3b8" font-size="11" dominant-baseline="middle">Moteur ↓</text>
+    <rect x="30" y="164" width="20" height="3" rx="1.5" fill="#f472b6" opacity="0.8"/>
+    <text x="58" y="167" fill="#94a3b8" font-size="11" dominant-baseline="middle">Recurrent ↻</text>
+    <rect x="30" y="186" width="20" height="3" rx="1.5" fill="#06b6d4" opacity="0.8"/>
+    <text x="58" y="189" fill="#94a3b8" font-size="11" dominant-baseline="middle">Commissure ↔</text>
+    <rect x="30" y="208" width="20" height="3" rx="1.5" fill="#a78bfa" opacity="0.8"/>
+    <text x="58" y="211" fill="#94a3b8" font-size="11" dominant-baseline="middle">Associatif ⟷</text>
+    <rect x="30" y="230" width="20" height="3" rx="1.5" fill="#10b981" opacity="0.8"/>
+    <text x="58" y="233" fill="#94a3b8" font-size="11" dominant-baseline="middle">Afferent ↑</text>
+  <!-- CONNEXIONS INTER-REGIONS -->
+    <path d="M390.0,264.8 Q458.6,335.8 476.8,432.8" 
+          stroke="#f59e0b" stroke-width="10.0" 
+          fill="none" opacity="0.95" marker-end="url(#arrow-feedforward)">
+      <title>Lobe antennaire (AL) -> Lobe lateral (LH): 28,500 synapses
+Projection glomerulaire -> PN -> LH. Voie olfactive ascendante principale.</title>
+    </path>
+    <text x="433.4" y="348.8" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">28.5k</text>
+    <path d="M390.0,264.8 Q516.2,362.2 675.2,374.0" 
+          stroke="#f59e0b" stroke-width="6.4" 
+          fill="none" opacity="0.79" marker-end="url(#arrow-feedforward)">
+      <title>Lobe antennaire (AL) -> Corps mushroom (MB): 18,200 synapses
+Projection neurons -> calyx du mushroom body. Apprentissage olfactif associatif.</title>
+    </path>
+    <text x="532.6" y="319.4" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">18.2k</text>
+    <path d="M1010.0,231.2 Q994.3,336.6 923.2,416.0" 
+          stroke="#f59e0b" stroke-width="4.4" 
+          fill="none" opacity="0.70" marker-end="url(#arrow-feedforward)">
+      <title>Organes de Bolwig (BO) -> Plaque supra-latérale (SLP): 12,400 synapses
+Voie visuelle laterale. Photorecepteurs -> cortex associatif visuel.</title>
+    </path>
+    <path d="M1010.0,231.2 Q820.8,343.8 724.8,542.0" 
+          stroke="#f59e0b" stroke-width="2.4" 
+          fill="none" opacity="0.61" marker-end="url(#arrow-feedforward)">
+      <title>Organes de Bolwig (BO) -> Plaque intermediaire (SIP): 6,800 synapses
+Voie visuelle mediane. Integration visuo-motrice directe.</title>
+    </path>
+    <path d="M228.8,500.0 Q563.4,353.8 923.2,416.0" 
+          stroke="#f59e0b" stroke-width="5.5" 
+          fill="none" opacity="0.75" marker-end="url(#arrow-feedforward)">
+      <title>Organes chordotonaux (CH) -> Plaque supra-latérale (SLP): 15,600 synapses
+Proprioception -> cortex associatif. Coordination posture et locomotion.</title>
+    </path>
+    <text x="576.0" y="458.0" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">15.6k</text>
+    <path d="M228.8,500.0 Q470.5,595.4 724.8,542.0" 
+          stroke="#f59e0b" stroke-width="3.2" 
+          fill="none" opacity="0.65" marker-end="url(#arrow-feedforward)">
+      <title>Organes chordotonaux (CH) -> Plaque intermediaire (SIP): 9,200 synapses
+Mecanoreception -> zone intermediaire. Reflexes rapides.</title>
+    </path>
+    <path d="M228.8,500.0 Q412.7,527.2 551.2,651.2" 
+          stroke="#f59e0b" stroke-width="2.6" 
+          fill="none" opacity="0.62" marker-end="url(#arrow-feedforward)">
+      <title>Organes chordotonaux (CH) -> Crete cerebrale (CRE): 7,400 synapses
+Feedback proprioceptif au centre moteur superieur.</title>
+    </path>
+    <path d="M476.8,432.8 Q702.5,491.4 923.2,416.0" 
+          stroke="#a78bfa" stroke-width="7.9" 
+          fill="none" opacity="0.85" marker-end="url(#arrow-associative)">
+      <title>Lobe lateral (LH) -> Plaque supra-latérale (SLP): 22,400 synapses
+Integration olfacto-visuelle. Decision comportementale multi-modale.</title>
+    </path>
+    <text x="700.0" y="424.4" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">22.4k</text>
+    <path d="M476.8,432.8 Q567.2,373.6 675.2,374.0" 
+          stroke="#a78bfa" stroke-width="5.5" 
+          fill="none" opacity="0.75" marker-end="url(#arrow-associative)">
+      <title>Lobe lateral (LH) -> Corps mushroom (MB): 15,800 synapses
+Feedback LH -> mushroom body. Modulation de la valence olfactive.</title>
+    </path>
+    <text x="576.0" y="403.4" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">15.8k</text>
+    <path d="M923.2,416.0 Q805.1,449.2 724.8,542.0" 
+          stroke="#a78bfa" stroke-width="6.5" 
+          fill="none" opacity="0.79" marker-end="url(#arrow-associative)">
+      <title>Plaque supra-latérale (SLP) -> Plaque intermediaire (SIP): 18,600 synapses
+Cortex associatif -> zone de transition. Flux sensoriel integre.</title>
+    </path>
+    <text x="824.0" y="479.0" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">18.6k</text>
+    <path d="M724.8,542.0 Q654.4,622.6 551.2,651.2" 
+          stroke="#a78bfa" stroke-width="5.0" 
+          fill="none" opacity="0.72" marker-end="url(#arrow-associative)">
+      <title>Plaque intermediaire (SIP) -> Crete cerebrale (CRE): 14,200 synapses
+Relais vers centre moteur superieur. Planification d'actions.</title>
+    </path>
+    <path d="M724.8,542.0 Q770.4,615.2 848.8,651.2" 
+          stroke="#a78bfa" stroke-width="4.5" 
+          fill="none" opacity="0.70" marker-end="url(#arrow-associative)">
+      <title>Plaque intermediaire (SIP) -> Plaque supra-mediane (SMP): 12,800 synapses
+Modulation peptidergique de l'etat comportemental et motivationnel.</title>
+    </path>
+    <path d="M551.2,651.2 Q700.0,606.6 848.8,651.2" 
+          stroke="#a78bfa" stroke-width="4.1" 
+          fill="none" opacity="0.68" marker-end="url(#arrow-associative)">
+      <title>Crete cerebrale (CRE) -> Plaque supra-mediane (SMP): 11,600 synapses
+Coordination moteur-etat interne. Sequencement comportemental.</title>
+    </path>
+    <path d="M675.2,374.0 Q571.6,494.0 551.2,651.2" 
+          stroke="#a78bfa" stroke-width="3.4" 
+          fill="none" opacity="0.65" marker-end="url(#arrow-associative)">
+      <title>Corps mushroom (MB) -> Crete cerebrale (CRE): 9,800 synapses
+Mushroom body -> centre moteur. Memoire a action.</title>
+    </path>
+    <path d="M675.2,374.0 Q803.6,486.6 848.8,651.2" 
+          stroke="#a78bfa" stroke-width="2.9" 
+          fill="none" opacity="0.63" marker-end="url(#arrow-associative)">
+      <title>Corps mushroom (MB) -> Plaque supra-mediane (SMP): 8,200 synapses
+Modulation dopaminergique de l'etat interne par le MB.</title>
+    </path>
+    <path d="M476.8,432.8 Q458.6,335.8 390.0,264.8" 
+          stroke="#f472b6" stroke-width="4.4" 
+          fill="none" opacity="0.70" marker-end="url(#arrow-recurrent)">
+      <title>Lobe lateral (LH) -> Lobe antennaire (AL): 12,400 synapses
+Feedback central -> lobe antennaire. Modulation olfactive descendante (top-down).</title>
+    </path>
+    <path d="M923.2,416.0 Q938.9,310.6 1010.0,231.2" 
+          stroke="#f472b6" stroke-width="1.5" 
+          fill="none" opacity="0.57" marker-end="url(#arrow-recurrent)">
+      <title>Plaque supra-latérale (SLP) -> Organes de Bolwig (BO): 4,200 synapses
+Feedback visuel. Attention visuelle et modulation de la sensibilite.</title>
+    </path>
+    <path d="M551.2,651.2 Q654.4,622.6 724.8,542.0" 
+          stroke="#f472b6" stroke-width="3.4" 
+          fill="none" opacity="0.65" marker-end="url(#arrow-recurrent)">
+      <title>Crete cerebrale (CRE) -> Plaque intermediaire (SIP): 9,800 synapses
+Boucle moteur-sensorielle. Prediction motrice et efference copy.</title>
+    </path>
+    <path d="M848.8,651.2 Q770.4,615.2 724.8,542.0" 
+          stroke="#f472b6" stroke-width="2.7" 
+          fill="none" opacity="0.62" marker-end="url(#arrow-recurrent)">
+      <title>Plaque supra-mediane (SMP) -> Plaque intermediaire (SIP): 7,600 synapses
+Regulation homeostatique du traitement sensoriel.</title>
+    </path>
+    <path d="M675.1999999999999,374.0 L675.1999999999999,374.0" 
+          stroke="#f472b6" stroke-width="5.4" 
+          fill="none" opacity="0.74" marker-end="url(#arrow-recurrent)">
+      <title>Corps mushroom (MB) -> Corps mushroom (MB): 15,400 synapses
+Recurrence interne au mushroom body. Rappel, consolidation et generalisation.</title>
+    </path>
+    <text x="675.2" y="374.0" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">15.4k</text>
+    <path d="M551.2,651.2 L551.2,651.2" 
+          stroke="#f472b6" stroke-width="2.9" 
+          fill="none" opacity="0.63" marker-end="url(#arrow-recurrent)">
+      <title>Crete cerebrale (CRE) -> Crete cerebrale (CRE): 8,200 synapses
+Auto-regulation motrice. Sequencement et timing des actions.</title>
+    </path>
+    <path d="M700.0,768.8 Q620.6,470.3 390.0,264.8" 
+          stroke="#06b6d4" stroke-width="3.0" 
+          fill="none" opacity="0.64" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Lobe antennaire (AL): 8,600 synapses
+Communication interhemispherique olfactive. Comparaison bilaterale.</title>
+    </path>
+    <path d="M700.0,768.8 Q758.7,558.9 923.2,416.0" 
+          stroke="#06b6d4" stroke-width="3.9" 
+          fill="none" opacity="0.68" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Plaque supra-latérale (SLP): 11,200 synapses
+Integration bilaterale des senses. Fusion perceptive.</title>
+    </path>
+    <path d="M700.0,768.8 Q746.4,659.1 724.8,542.0" 
+          stroke="#06b6d4" stroke-width="3.4" 
+          fill="none" opacity="0.65" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Plaque intermediaire (SIP): 9,800 synapses
+Coordination interhemispherique motrice. Synchronisation locomotrice.</title>
+    </path>
+    <path d="M700.0,768.8 Q608.0,732.3 551.2,651.2" 
+          stroke="#06b6d4" stroke-width="2.6" 
+          fill="none" opacity="0.62" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Crete cerebrale (CRE): 7,400 synapses
+Synchronisation des programmes moteurs bilateraux.</title>
+    </path>
+    <path d="M390.0,264.8 Q469.4,563.3 700.0,768.8" 
+          stroke="#06b6d4" stroke-width="2.2" 
+          fill="none" opacity="0.60" marker-end="url(#arrow-commissure)">
+      <title>Lobe antennaire (AL) -> Protuberance intercalaire (INP): 6,200 synapses
+Olfaction contralaterale. Detection de gradients spatiaux.</title>
+    </path>
+    <path d="M923.2,416.0 Q864.5,625.9 700.0,768.8" 
+          stroke="#06b6d4" stroke-width="2.7" 
+          fill="none" opacity="0.62" marker-end="url(#arrow-commissure)">
+      <title>Plaque supra-latérale (SLP) -> Protuberance intercalaire (INP): 7,800 synapses
+Associatif contralateral. Integration multi-modale bilaterale.</title>
+    </path>
+    <path d="M551.2,651.2 Q591.6,786.9 700.0,878.0" 
+          stroke="#ef4444" stroke-width="6.5" 
+          fill="none" opacity="0.79" marker-end="url(#arrow-efferent)">
+      <title>Crete cerebrale (CRE) -> Cordon nerveux ventral (VNC): 18,600 synapses
+Commande motrice descendante. Activation des pattern generators segmentaires.</title>
+    </path>
+    <text x="625.6" y="764.6" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">18.6k</text>
+    <path d="M848.8,651.2 Q808.4,786.9 700.0,878.0" 
+          stroke="#ef4444" stroke-width="4.4" 
+          fill="none" opacity="0.70" marker-end="url(#arrow-efferent)">
+      <title>Plaque supra-mediane (SMP) -> Cordon nerveux ventral (VNC): 12,400 synapses
+Modulation peptidergique de la locomotion et du rythme.</title>
+    </path>
+    <path d="M724.8,542.0 Q662.0,706.3 700.0,878.0" 
+          stroke="#ef4444" stroke-width="5.0" 
+          fill="none" opacity="0.72" marker-end="url(#arrow-efferent)">
+      <title>Plaque intermediaire (SIP) -> Cordon nerveux ventral (VNC): 14,200 synapses
+Relais moteur direct. Reflexes rapides et corrections posturales.</title>
+    </path>
+    <path d="M700.0,768.8 Q716.4,823.4 700.0,878.0" 
+          stroke="#ef4444" stroke-width="3.4" 
+          fill="none" opacity="0.65" marker-end="url(#arrow-efferent)">
+      <title>Protuberance intercalaire (INP) -> Cordon nerveux ventral (VNC): 9,800 synapses
+Coordination locomotrice bilaterale. Alternance des pas.</title>
+    </path>
+    <path d="M700.0,878.0 Q521.1,618.3 228.8,500.0" 
+          stroke="#10b981" stroke-width="3.9" 
+          fill="none" opacity="0.68" marker-end="url(#arrow-afferent)">
+      <title>Cordon nerveux ventral (VNC) -> Organes chordotonaux (CH): 11,200 synapses
+Proprioception ascendante depuis les segments corporels.</title>
+    </path>
+    <path d="M700.0,878.0 Q662.0,706.3 724.8,542.0" 
+          stroke="#10b981" stroke-width="3.0" 
+          fill="none" opacity="0.64" marker-end="url(#arrow-afferent)">
+      <title>Cordon nerveux ventral (VNC) -> Plaque intermediaire (SIP): 8,600 synapses
+Feedback locomoteur au centre integrateur. Boucle fermee.</title>
+    </path>
+  <!-- REGIONS FONCTIONNELLES -->
+    <g transform="translate(390.0,264.8)">
+      <circle r="23.6" fill="#f59e0b" opacity="0.12" />
+      <circle r="13.0" fill="#f59e0b" opacity="0.5"/>
+      <circle r="5" fill="#f59e0b"/>
+      <text y="41.6" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">AL</text>
+      <text y="55.6" text-anchor="middle" 
+            fill="#64748b" font-size="9">285N</text>
+    </g>
+    <g transform="translate(1010.0,231.2)">
+      <circle r="18.2" fill="#38bdf8" opacity="0.12" />
+      <circle r="10.0" fill="#38bdf8" opacity="0.5"/>
+      <circle r="5" fill="#38bdf8"/>
+      <text y="36.2" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">BO</text>
+      <text y="50.2" text-anchor="middle" 
+            fill="#64748b" font-size="9">24N</text>
+    </g>
+    <g transform="translate(228.8,500.0)">
+      <circle r="21.6" fill="#10b981" opacity="0.12" />
+      <circle r="11.9" fill="#10b981" opacity="0.5"/>
+      <circle r="5" fill="#10b981"/>
+      <text y="39.6" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">CH</text>
+      <text y="53.6" text-anchor="middle" 
+            fill="#64748b" font-size="9">156N</text>
+    </g>
+    <g transform="translate(675.2,374.0)">
+      <circle r="23.1" fill="#f472b6" opacity="0.12" />
+      <circle r="12.7" fill="#f472b6" opacity="0.5"/>
+      <circle r="5" fill="#f472b6"/>
+      <text y="41.1" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">MB</text>
+      <text y="55.1" text-anchor="middle" 
+            fill="#64748b" font-size="9">250N</text>
+    </g>
+    <g transform="translate(476.8,432.8)">
+      <circle r="24.8" fill="#a78bfa" opacity="0.12" />
+      <circle r="13.6" fill="#a78bfa" opacity="0.5"/>
+      <circle r="5" fill="#a78bfa"/>
+      <text y="42.8" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">LH</text>
+      <text y="56.8" text-anchor="middle" 
+            fill="#64748b" font-size="9">380N</text>
+    </g>
+    <g transform="translate(923.2,416.0)">
+      <circle r="25.2" fill="#8b5cf6" opacity="0.12" />
+      <circle r="13.9" fill="#8b5cf6" opacity="0.5"/>
+      <circle r="5" fill="#8b5cf6"/>
+      <text y="43.2" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">SLP</text>
+      <text y="57.2" text-anchor="middle" 
+            fill="#64748b" font-size="9">420N</text>
+    </g>
+    <g transform="translate(724.8,542.0)">
+      <circle r="23.9" fill="#6366f1" opacity="0.12" />
+      <circle r="13.2" fill="#6366f1" opacity="0.5"/>
+      <circle r="5" fill="#6366f1"/>
+      <text y="41.9" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">SIP</text>
+      <text y="55.9" text-anchor="middle" 
+            fill="#64748b" font-size="9">310N</text>
+    </g>
+    <g transform="translate(551.2,651.2)">
+      <circle r="23.7" fill="#ec4899" opacity="0.12" />
+      <circle r="13.0" fill="#ec4899" opacity="0.5"/>
+      <circle r="5" fill="#ec4899"/>
+      <text y="41.7" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">CRE</text>
+      <text y="55.7" text-anchor="middle" 
+            fill="#64748b" font-size="9">290N</text>
+    </g>
+    <g transform="translate(848.8,651.2)">
+      <circle r="24.3" fill="#d946ef" opacity="0.12" />
+      <circle r="13.4" fill="#d946ef" opacity="0.5"/>
+      <circle r="5" fill="#d946ef"/>
+      <text y="42.3" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">SMP</text>
+      <text y="56.3" text-anchor="middle" 
+            fill="#64748b" font-size="9">340N</text>
+    </g>
+    <g transform="translate(700.0,768.8)">
+      <circle r="22.0" fill="#06b6d4" opacity="0.12" />
+      <circle r="12.1" fill="#06b6d4" opacity="0.5"/>
+      <circle r="5" fill="#06b6d4"/>
+      <text y="40.0" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">INP</text>
+      <text y="54.0" text-anchor="middle" 
+            fill="#64748b" font-size="9">180N</text>
+    </g>
+    <g transform="translate(700.0,878.0)">
+      <circle r="24.8" fill="#ef4444" opacity="0.12" />
+      <circle r="13.6" fill="#ef4444" opacity="0.5"/>
+      <circle r="5" fill="#ef4444"/>
+      <text y="42.8" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">VNC</text>
+      <text y="56.8" text-anchor="middle" 
+            fill="#64748b" font-size="9">381N</text>
+    </g>
+  <!-- INFOBOX STATISTIQUES -->
+  <rect x="1140" y="90" width="230" height="130" rx="12" 
+        fill="#111827" stroke="#1e293b" stroke-width="1" opacity="0.95"/>
+  <text x="1155" y="120" fill="#38bdf8" font-size="14" font-weight="700">
+    Statistiques
+  </text>
+  <text x="1155" y="145" fill="#e2e8f0" font-size="12">
+    Faisceaux affiches: <tspan fill="#f472b6" font-weight="700">33</tspan>
+  </text>
+  <text x="1155" y="165" fill="#e2e8f0" font-size="12">
+    Synapses totales: <tspan fill="#f472b6" font-weight="700">394,900</tspan>
+  </text>
+  <text x="1155" y="185" fill="#94a3b8" font-size="10">
+    Epaisseur ∝ nombre de synapses
+  </text>
+  <text x="1155" y="205" fill="#94a3b8" font-size="10">
+    1 trait = agregation inter-regions
+  </text>
+</svg>

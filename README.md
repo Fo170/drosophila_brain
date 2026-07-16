@@ -40,6 +40,200 @@ Deux implémentations : **Python** (prototypage, tests) et **C++ Qt6** (performa
    sensoriels            et intégration         motrices/endocrines
 ```
 
+## Connectome de la Larve de Drosophile
+
+Connectome complet d'insecte actuellement disponible :
+
+### Cerveau de larve de drosophile (Drosophila melanogaster) — 2023
+
+C'est le seul connectome complet d'insecte disponible à ce jour. Publié dans *Science* en mars 2023 par l'équipe de Marta Zlatic (Cambridge) et Joshua T. Vogelstein (Johns Hopkins), il représente la carte la plus complète et la plus complexe jamais réalisée pour un cerveau d'insecte.
+
+**Caractéristiques :**
+- 3 016 neurones et 548 000 synapses
+- Résolution synaptique complète (microscopie électronique)
+- Reconstruction des deux hémisphères cérébraux
+- Classification hiérarchique en 93 types neuronaux
+- Inclut les interactions cerveau–moelle épinière
+
+**Architecture découverte :**
+- Architecture hautement récurrente (41 % des neurones reçoivent des entrées récurrentes à longue portée)
+- Intégration multisensorielle étendue dans l'ensemble du cerveau
+- 73 % des « hubs » d'entrée-sortie sont postsynaptiques au centre d'apprentissage ou présynaptiques aux neurones dopaminergiques
+- Communication interhémisphérique abondante via des neurones contralatéraux
+
+Ce travail, fruit de 12 ans d'imagerie et d'analyse, constitue une avancée majeure par rapport aux trois connectomes complets antérieurs (C. elegans, Ciona intestinalis, Platynereis dumerilii), qui ne comportaient que quelques centaines de neurones.
+
+### Organigramme du Connectome
+
+![Aperçu du connectome](vue%20connectome/connectome_drosophila_apercu.png)
+
+**Diagrammes détaillés (SVG interactifs) :**
+
+- [`connectome_drosophila_full.svg`](vue%20connectome/connectome_drosophila_full.svg) — Vue complète du connectome
+- [`connectome_drosophila_sensory.svg`](vue%20connectome/connectome_drosophila_sensory.svg) — Voies sensorielles
+- [`connectome_drosophila_associative.svg`](vue%20connectome/connectome_drosophila_associative.svg) — Circuits associatifs (MB, LH)
+- [`connectome_drosophila_motor.svg`](vue%20connectome/connectome_drosophila_motor.svg) — Voies motrices
+- [`connectome_drosophila_recurrent.svg`](vue%20connectome/connectome_drosophila_recurrent.svg) — Boucles récurrentes
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  CERVEAU DE LARVE (3 016 neurones)           │
+│                   548 000 synapses | 2 hémisphères          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│  INPUTS       │    │  INTERNEURONES│    │  OUTPUTS      │
+│  (477 SN +    │───▶│  (2 118)      │───▶│  (418)        │
+│   ANs)        │    │               │    │               │
+└───────────────┘    └───────────────┘    └───────────────┘
+        │                     │                     │
+        ▼                     ▼                     ▼
+   Neurones              Réseau de traitement   Commandes
+   sensoriels            et intégration         motrices/endocrines
+```
+
+### Types de neurones et leurs liaisons
+
+**A. Inputs sensoriels (477 neurones)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    INPUTS SENSORIELS                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+    ┌─────────┬─────────┬─────────┬─────────┬─────────┐
+    ▼         ▼         ▼         ▼         ▼         ▼
+┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
+│Olfactif│ │Gustatif│ │Visuel  │ │Thermo- │ │Mécano- │ │Proprio-│
+│(ORN)   │ │(GRN)   │ │(PR)    │ │sensitif│ │sensitif│ │ceptif  │
+│176     │ │42      │ │29      │ │8       │ │10      │ │12      │
+└───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘
+    │         │         │         │         │         │
+    └─────────┴─────────┴─────────┴─────────┴─────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │  Neurones         │
+                    │  ascendants (ANs) │
+                    │  du VNC           │
+                    │  ~200 neurones    │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  PROJECTION      │
+                    │  NEURONS (PNs)   │
+                    │  2nd ordre        │
+                    └─────────────────┘
+```
+
+**B. Interneurones (2 118 neurones) — Cœur du traitement**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  INTERNEURONES (2 118)                        │
+│              Classification en 93 types cellulaires           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│  CENTRE D'    │    │  CORNE        │    │  HUBS &       │
+│  MÉMOIRE      │    │  LATÉRALE (LH)│    │  RÉCURRENCE   │
+│  (MB)         │    │               │    │               │
+│  365 neurones │    │  Valeurs      │    │  41% des      │
+│               │    │  innées       │    │  neurones en  │
+│  • 176 KCs    │    │               │    │  boucles      │
+│  • 48 MBONs   │    │  • PNs        │    │  récurrentes  │
+│  • 30 MBINs   │    │  • LHNs       │    │               │
+│  • 66 PNs     │    │  • CNs        │    │  DANs très    │
+│  • 20 autres  │    │               │    │  récurrents   │
+└───────┬───────┘    └───────┬───────┘    └───────┬───────┘
+        │                    │                    │
+        └────────────────────┼────────────────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  NEURONES DE    │
+                    │  CONVERGENCE    │
+                    │  (CNs)          │
+                    │  Intègrent MB   │
+                    │  + LH           │
+                    └─────────────────┘
+```
+
+**C. Outputs (418 neurones)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      OUTPUTS (418)                           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│  DNSEZ        │    │  DNVNC        │    │  RGN          │
+│  (54)         │    │  (180)        │    │  (184)        │
+│               │    │               │    │               │
+│  Descendants  │    │  Descendants  │    │  Neurones de  │
+│  vers zone    │    │  vers cordon   │    │  la glande    │
+│  sous-œso-    │    │  nerveux       │    │  annulaire    │
+│  phagienne    │    │  ventral       │    │  (hormones)   │
+│               │    │               │    │               │
+│  • Comportement│   │  • Locomotion  │    │  • Endocrine   │
+│  • Alimentation│  │  • Action      │    │  • Croissance  │
+│               │    │    selection   │    │               │
+└───────────────┘    └───────────────┘    └───────────────┘
+```
+
+### Circuits et motifs structuraux clés
+
+**Types de connexions synaptiques :**
+| Type | Fraction | Rôle |
+|------|----------|------|
+| Axo-dendritique (a-d) | 66.6% | Feedforward classique |
+| Axo-axonique (a-a) | 25.8% | Modulation axonique |
+| Dendro-dendritique (d-d) | 5.8% | Rétroaction locale |
+| Dendro-axonique (d-a) | 1.8% | Feedback vers l'axon |
+
+**Architecture récurrente :** 41% des neurones en boucles récurrentes. 73% des hubs in-out liés au centre de mémoire (Mushroom Body). Les DANs sont très récurrents.
+
+**Intégration multisensorielle :** 88% des neurones sont multimodaux — la majorité des neurones de 3e et 4e ordre intègrent plusieurs modalités sensorielles.
+
+**Communication interhémisphérique :** 61% ipsilatéraux, 24% bilatéraux, 15% contralatéraux. 88% des hubs in-out ont des axones contra- ou bilatéraux.
+
+**Hiérarchie des 93 types cellulaires :** Clustering basé sur la connectivité synaptique, validé par morphologie (NBLAST) et fonction connue. 93% ont des homologues bilatéraux.
+
+### Statistiques clés
+
+| Caractéristique | Valeur | Signification |
+|----------------|--------|---------------|
+| Neurones totaux | 3 016 | Dont 2 536 différenciés |
+| Synapses | ~548 000 | Résolution synaptique complète |
+| Types cellulaires | 93 | Clustering par connectivité |
+| Connexions a-d | 66.6% | Feedforward classique |
+| Connexions a-a | 25.8% | Modulation axonique |
+| Neurones récurrents | 41% | Boucles longue portée |
+| Hubs in-out liés au MB | 73% | Centre de mémoire dominant |
+| Axones contralatéraux | 15% | Communication interhémisphère |
+| Profondeur max signal | 8 sauts | Du sensoriel à la sortie |
+| Multisensorialité | 88% | Neurones multimodaux |
+
+### Données et visualisations
+
+Les données complètes sont disponibles via :
+- [CATMAID](https://catmaid.virtualflybrain.org/) (L1 Larval CNS)
+- Graph-tool : `gt.collection.ns["fly_larva"]` pour analyse programmatique
+- Supplementary Materials : Figures S1-S25, Tables S1-S2, Data S1-54
+- [`vue connectome/`](vue%20connectome/) — Diagrammes SVG interactifs du présent dépôt
+
+### Connectomes partiels d'insectes
+
+Plusieurs connectomes partiels de la mouche adulte existent :
+- **Hemibrain** (Drosophila adulte) — connectome d'une moitié de cerveau (~25 000 neurones, 2021)
+- **Connectomes complets mâle et femelle** Drosophila adulte (~140 000 neurones, 2024–2025)
+
+Aucun autre insecte (abeille, papillon, fourmi, etc.) ne dispose encore d'un connectome cérébral complet.
+
 ## Implémentation C++ Qt6
 
 Le répertoire `QT/` contient une réécriture complète en **C++20 / Qt6 / QOpenGLWidget / Eigen3** pour des performances maximales.

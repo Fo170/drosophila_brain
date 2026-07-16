@@ -1,0 +1,249 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 1400 1000" 
+     width="1400" height="1000"
+     style="background:#0a0e17; font-family:'Inter',system-ui,sans-serif;">
+  <defs>
+    <marker id="arrow-feedforward" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-efferent" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ef4444" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-recurrent" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#f472b6" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-commissure" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#06b6d4" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-associative" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#a78bfa" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-afferent" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#10b981" opacity="0.7"/>
+    </marker>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- TITRE ET LEGENDE -->
+  <text x="700.0" y="40" text-anchor="middle" 
+        fill="#38bdf8" font-size="22" font-weight="700">
+    Connectome Larve Drosophila melanogaster
+  </text>
+  <text x="700.0" y="65" text-anchor="middle" 
+        fill="#64748b" font-size="13">
+    Boucles recurrentes et commissures · Winding et al. 2023 · 3 016 neurones · 548 000 synapses
+  </text>
+  <text x="30" y="100" fill="#e2e8f0" font-size="13" font-weight="600">Legende des faisceaux</text>
+    <rect x="30" y="120" width="20" height="3" rx="1.5" fill="#f59e0b" opacity="0.8"/>
+    <text x="58" y="123" fill="#94a3b8" font-size="11" dominant-baseline="middle">Sensoriel ↑</text>
+    <rect x="30" y="142" width="20" height="3" rx="1.5" fill="#ef4444" opacity="0.8"/>
+    <text x="58" y="145" fill="#94a3b8" font-size="11" dominant-baseline="middle">Moteur ↓</text>
+    <rect x="30" y="164" width="20" height="3" rx="1.5" fill="#f472b6" opacity="0.8"/>
+    <text x="58" y="167" fill="#94a3b8" font-size="11" dominant-baseline="middle">Recurrent ↻</text>
+    <rect x="30" y="186" width="20" height="3" rx="1.5" fill="#06b6d4" opacity="0.8"/>
+    <text x="58" y="189" fill="#94a3b8" font-size="11" dominant-baseline="middle">Commissure ↔</text>
+    <rect x="30" y="208" width="20" height="3" rx="1.5" fill="#a78bfa" opacity="0.8"/>
+    <text x="58" y="211" fill="#94a3b8" font-size="11" dominant-baseline="middle">Associatif ⟷</text>
+    <rect x="30" y="230" width="20" height="3" rx="1.5" fill="#10b981" opacity="0.8"/>
+    <text x="58" y="233" fill="#94a3b8" font-size="11" dominant-baseline="middle">Afferent ↑</text>
+  <!-- CONNEXIONS INTER-REGIONS -->
+    <path d="M476.8,432.8 Q408.2,361.8 390.0,264.8" 
+          stroke="#f472b6" stroke-width="4.4" 
+          fill="none" opacity="0.70" marker-end="url(#arrow-recurrent)">
+      <title>Lobe lateral (LH) -> Lobe antennaire (AL): 12,400 synapses
+Feedback central -> lobe antennaire. Modulation olfactive descendante (top-down).</title>
+    </path>
+    <path d="M923.2,416.0 Q994.3,336.6 1010.0,231.2" 
+          stroke="#f472b6" stroke-width="1.5" 
+          fill="none" opacity="0.57" marker-end="url(#arrow-recurrent)">
+      <title>Plaque supra-latérale (SLP) -> Organes de Bolwig (BO): 4,200 synapses
+Feedback visuel. Attention visuelle et modulation de la sensibilite.</title>
+    </path>
+    <path d="M551.2,651.2 Q621.6,570.6 724.8,542.0" 
+          stroke="#f472b6" stroke-width="3.4" 
+          fill="none" opacity="0.65" marker-end="url(#arrow-recurrent)">
+      <title>Crete cerebrale (CRE) -> Plaque intermediaire (SIP): 9,800 synapses
+Boucle moteur-sensorielle. Prediction motrice et efference copy.</title>
+    </path>
+    <path d="M848.8,651.2 Q803.2,578.0 724.8,542.0" 
+          stroke="#f472b6" stroke-width="2.7" 
+          fill="none" opacity="0.62" marker-end="url(#arrow-recurrent)">
+      <title>Plaque supra-mediane (SMP) -> Plaque intermediaire (SIP): 7,600 synapses
+Regulation homeostatique du traitement sensoriel.</title>
+    </path>
+    <path d="M675.1999999999999,374.0 L675.1999999999999,374.0" 
+          stroke="#f472b6" stroke-width="5.4" 
+          fill="none" opacity="0.74" marker-end="url(#arrow-recurrent)">
+      <title>Corps mushroom (MB) -> Corps mushroom (MB): 15,400 synapses
+Recurrence interne au mushroom body. Rappel, consolidation et generalisation.</title>
+    </path>
+    <text x="675.2" y="374.0" 
+          text-anchor="middle" dy="-5"
+          fill="#94a3b8" font-size="10" font-family="monospace"
+          opacity="0.8">15.4k</text>
+    <path d="M551.2,651.2 L551.2,651.2" 
+          stroke="#f472b6" stroke-width="2.9" 
+          fill="none" opacity="0.63" marker-end="url(#arrow-recurrent)">
+      <title>Crete cerebrale (CRE) -> Crete cerebrale (CRE): 8,200 synapses
+Auto-regulation motrice. Sequencement et timing des actions.</title>
+    </path>
+    <path d="M700.0,768.8 Q469.4,563.3 390.0,264.8" 
+          stroke="#06b6d4" stroke-width="3.0" 
+          fill="none" opacity="0.64" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Lobe antennaire (AL): 8,600 synapses
+Communication interhemispherique olfactive. Comparaison bilaterale.</title>
+    </path>
+    <path d="M700.0,768.8 Q864.5,625.9 923.2,416.0" 
+          stroke="#06b6d4" stroke-width="3.9" 
+          fill="none" opacity="0.68" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Plaque supra-latérale (SLP): 11,200 synapses
+Integration bilaterale des senses. Fusion perceptive.</title>
+    </path>
+    <path d="M700.0,768.8 Q678.4,651.7 724.8,542.0" 
+          stroke="#06b6d4" stroke-width="3.4" 
+          fill="none" opacity="0.65" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Plaque intermediaire (SIP): 9,800 synapses
+Coordination interhemispherique motrice. Synchronisation locomotrice.</title>
+    </path>
+    <path d="M700.0,768.8 Q643.2,687.7 551.2,651.2" 
+          stroke="#06b6d4" stroke-width="2.6" 
+          fill="none" opacity="0.62" marker-end="url(#arrow-commissure)">
+      <title>Protuberance intercalaire (INP) -> Crete cerebrale (CRE): 7,400 synapses
+Synchronisation des programmes moteurs bilateraux.</title>
+    </path>
+    <path d="M390.0,264.8 Q620.6,470.3 700.0,768.8" 
+          stroke="#06b6d4" stroke-width="2.2" 
+          fill="none" opacity="0.60" marker-end="url(#arrow-commissure)">
+      <title>Lobe antennaire (AL) -> Protuberance intercalaire (INP): 6,200 synapses
+Olfaction contralaterale. Detection de gradients spatiaux.</title>
+    </path>
+    <path d="M923.2,416.0 Q758.7,558.9 700.0,768.8" 
+          stroke="#06b6d4" stroke-width="2.7" 
+          fill="none" opacity="0.62" marker-end="url(#arrow-commissure)">
+      <title>Plaque supra-latérale (SLP) -> Protuberance intercalaire (INP): 7,800 synapses
+Associatif contralateral. Integration multi-modale bilaterale.</title>
+    </path>
+  <!-- REGIONS FONCTIONNELLES -->
+    <g transform="translate(390.0,264.8)">
+      <circle r="23.6" fill="#f59e0b" opacity="0.12" />
+      <circle r="13.0" fill="#f59e0b" opacity="0.5"/>
+      <circle r="5" fill="#f59e0b"/>
+      <text y="41.6" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">AL</text>
+      <text y="55.6" text-anchor="middle" 
+            fill="#64748b" font-size="9">285N</text>
+    </g>
+    <g transform="translate(1010.0,231.2)">
+      <circle r="18.2" fill="#38bdf8" opacity="0.12" />
+      <circle r="10.0" fill="#38bdf8" opacity="0.5"/>
+      <circle r="5" fill="#38bdf8"/>
+      <text y="36.2" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">BO</text>
+      <text y="50.2" text-anchor="middle" 
+            fill="#64748b" font-size="9">24N</text>
+    </g>
+    <g transform="translate(228.8,500.0)">
+      <circle r="21.6" fill="#10b981" opacity="0.12" />
+      <circle r="11.9" fill="#10b981" opacity="0.5"/>
+      <circle r="5" fill="#10b981"/>
+      <text y="39.6" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">CH</text>
+      <text y="53.6" text-anchor="middle" 
+            fill="#64748b" font-size="9">156N</text>
+    </g>
+    <g transform="translate(675.2,374.0)">
+      <circle r="23.1" fill="#f472b6" opacity="0.12" />
+      <circle r="12.7" fill="#f472b6" opacity="0.5"/>
+      <circle r="5" fill="#f472b6"/>
+      <text y="41.1" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">MB</text>
+      <text y="55.1" text-anchor="middle" 
+            fill="#64748b" font-size="9">250N</text>
+    </g>
+    <g transform="translate(476.8,432.8)">
+      <circle r="24.8" fill="#a78bfa" opacity="0.12" />
+      <circle r="13.6" fill="#a78bfa" opacity="0.5"/>
+      <circle r="5" fill="#a78bfa"/>
+      <text y="42.8" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">LH</text>
+      <text y="56.8" text-anchor="middle" 
+            fill="#64748b" font-size="9">380N</text>
+    </g>
+    <g transform="translate(923.2,416.0)">
+      <circle r="25.2" fill="#8b5cf6" opacity="0.12" />
+      <circle r="13.9" fill="#8b5cf6" opacity="0.5"/>
+      <circle r="5" fill="#8b5cf6"/>
+      <text y="43.2" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">SLP</text>
+      <text y="57.2" text-anchor="middle" 
+            fill="#64748b" font-size="9">420N</text>
+    </g>
+    <g transform="translate(724.8,542.0)">
+      <circle r="23.9" fill="#6366f1" opacity="0.12" />
+      <circle r="13.2" fill="#6366f1" opacity="0.5"/>
+      <circle r="5" fill="#6366f1"/>
+      <text y="41.9" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">SIP</text>
+      <text y="55.9" text-anchor="middle" 
+            fill="#64748b" font-size="9">310N</text>
+    </g>
+    <g transform="translate(551.2,651.2)">
+      <circle r="23.7" fill="#ec4899" opacity="0.12" />
+      <circle r="13.0" fill="#ec4899" opacity="0.5"/>
+      <circle r="5" fill="#ec4899"/>
+      <text y="41.7" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">CRE</text>
+      <text y="55.7" text-anchor="middle" 
+            fill="#64748b" font-size="9">290N</text>
+    </g>
+    <g transform="translate(848.8,651.2)">
+      <circle r="24.3" fill="#d946ef" opacity="0.12" />
+      <circle r="13.4" fill="#d946ef" opacity="0.5"/>
+      <circle r="5" fill="#d946ef"/>
+      <text y="42.3" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">SMP</text>
+      <text y="56.3" text-anchor="middle" 
+            fill="#64748b" font-size="9">340N</text>
+    </g>
+    <g transform="translate(700.0,768.8)">
+      <circle r="22.0" fill="#06b6d4" opacity="0.12" />
+      <circle r="12.1" fill="#06b6d4" opacity="0.5"/>
+      <circle r="5" fill="#06b6d4"/>
+      <text y="40.0" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">INP</text>
+      <text y="54.0" text-anchor="middle" 
+            fill="#64748b" font-size="9">180N</text>
+    </g>
+    <g transform="translate(700.0,878.0)">
+      <circle r="24.8" fill="#ef4444" opacity="0.12" />
+      <circle r="13.6" fill="#ef4444" opacity="0.5"/>
+      <circle r="5" fill="#ef4444"/>
+      <text y="42.8" text-anchor="middle" 
+            fill="#e2e8f0" font-size="12" font-weight="600">VNC</text>
+      <text y="56.8" text-anchor="middle" 
+            fill="#64748b" font-size="9">381N</text>
+    </g>
+  <!-- INFOBOX STATISTIQUES -->
+  <rect x="1140" y="90" width="230" height="130" rx="12" 
+        fill="#111827" stroke="#1e293b" stroke-width="1" opacity="0.95"/>
+  <text x="1155" y="120" fill="#38bdf8" font-size="14" font-weight="700">
+    Statistiques
+  </text>
+  <text x="1155" y="145" fill="#e2e8f0" font-size="12">
+    Faisceaux affiches: <tspan fill="#f472b6" font-weight="700">12</tspan>
+  </text>
+  <text x="1155" y="165" fill="#e2e8f0" font-size="12">
+    Synapses totales: <tspan fill="#f472b6" font-weight="700">108,600</tspan>
+  </text>
+  <text x="1155" y="185" fill="#94a3b8" font-size="10">
+    Epaisseur ∝ nombre de synapses
+  </text>
+  <text x="1155" y="205" fill="#94a3b8" font-size="10">
+    1 trait = agregation inter-regions
+  </text>
+</svg>
