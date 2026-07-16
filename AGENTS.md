@@ -125,6 +125,53 @@ Inputs (477) → PNs (210) → [KC (176) + LHN (50)] → CN (108) → Outputs (4
 
 ---
 
+## Agent : Générateur SVG du Connectome (`vue connectome/generateur_connectome_drosophila.py`)
+
+**Rôle** : Génère des diagrammes SVG interactifs du connectome larvaire.
+
+**Architecture fonctionnelle** (10 régions cérébrales) :
+| Région | Neurones | Type | Rôle |
+|--------|----------|------|------|
+| AL (Lobe antennaire) | 285 | sensoriel | Olfaction primaire |
+| BO (Organes de Bolwig) | 24 | sensoriel | Photoréception |
+| CH (Organes chordotonaux) | 156 | sensoriel | Mécano/proprioception |
+| MB (Mushroom Body) | 250 | intégrateur | Apprentissage et mémoire |
+| LH (Corne latérale) | 380 | intégrateur | Intégration multimodale |
+| SLP (Plaque supra-latérale) | 420 | intégrateur | Cortex associatif |
+| SIP (Plaque intermediaire) | 310 | intégrateur | Transition sensorimotrice |
+| CRE (Crête cérébrale) | 290 | intégrateur | Coordination motrice |
+| SMP (Plaque supra-médiane) | 340 | intégrateur | Modulation peptidergique |
+| INP (Protuberance intercalaire) | 180 | commissure | Communication interhémisphérique |
+| VNC (Cordon nerveux ventral) | 381 | moteur | Motoneurones et locomotion |
+
+**Types de faisceaux** :
+| Type | Couleur | Exemple |
+|------|---------|---------|
+| Sensoriel ↑ | Orange | AL → LH (28 500 syn.) |
+| Moteur ↓ | Rouge | CRE → VNC (18 600 syn.) |
+| Récurrent ↻ | Rose | MB ↔ MB (15 400 syn.) |
+| Commissure ↔ | Cyan | INP ↔ AL (8 600 syn.) |
+| Associatif ⟷ | Violet | LH → SLP (22 400 syn.) |
+| Afférent ↑ | Vert | VNC → CH (11 200 syn.) |
+
+**Interactivité** :
+- **Survol région** : cercle illuminé, texte en blanc
+- **Survol connexion** : trait devient très visible
+- **Tooltips** (`<title>`) : infos détaillées en survol
+- **Barre de navigation** : bascule entre 5 vues
+- **Régions cliquables** : lien vers la vue correspondante
+
+**Vues générées** :
+- `full` — Vue d'ensemble complète (tous les faisceaux)
+- `sensory` — Flux sensoriels ascendants uniquement
+- `motor` — Flux moteurs descendants uniquement
+- `recurrent` — Boucles récurrentes et commissures
+- `associative` — Réseau associatif intra-cérébral
+
+**Données JSON** : `connectome_data.json` exporté pour utilisation externe (D3.js, Cytoscape)
+
+---
+
 ## Agent : Apprentissage DAN-Modulé (`learning/reinforcement_learning.py`)
 
 **Rôle** : Modifie les poids KC→MBON selon les signaux de récompense/punition.
@@ -402,10 +449,13 @@ Monde Virtuel ──► Sensory Tracts ──► Circuits (AL, MB, LH)
                               Feedback Loops ──► Brain Network
                                          │
                                          ▼
-                               Learning (DAN-modulé) ──► Synapses
-                                          │
-                                          ▼
-                               Visualization (Python 2D/3D + C++ GLWidget)
+                                Learning (DAN-modulé) ──► Synapses
+                                           │
+                                           ▼
+                                Visualization (Python 2D/3D + C++ GLWidget)
+                                           │
+                                           ▼
+                             SVG Generator (diagrammes interactifs)
 ```
 
 ---
