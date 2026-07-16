@@ -268,6 +268,17 @@ class ConnectomeSVGGenerator:
     def _arrow_marker(self, color: str, marker_id: str) -> str:
         """Genere un marqueur de fleche SVG"""
         return f'    <marker id="{marker_id}" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">\n      <path d="M0,0 L0,6 L9,3 z" fill="{color}" opacity="0.7"/>\n    </marker>'
+
+    def _render_styles(self) -> str:
+        """Genere les styles CSS pour l'interactivite (hover, transitions)"""
+        return '''  <style>
+    .region { cursor: pointer; }
+    .region:hover circle:nth-of-type(2) { opacity: 0.9; }
+    .region:hover text { fill: #ffffff; font-weight: 700; }
+    .conn { cursor: crosshair; }
+    .conn:hover { stroke-opacity: 0.9 !important; }
+    a:hover text { fill: #38bdf8 !important; }
+  </style>'''
     
     def generate_svg(self, mode: str = "full", selected_region: Optional[str] = None) -> str:
         """
@@ -309,6 +320,9 @@ class ConnectomeSVGGenerator:
         
         svg_parts.append("  </defs>")
         
+        # Styles CSS interactifs
+        svg_parts.append(self._render_styles())
+
         # Titre et legende
         svg_parts.append(self._render_title_and_legend(mode))
         
@@ -343,7 +357,7 @@ class ConnectomeSVGGenerator:
         return conns
     
     def _render_connections(self, conns: List[Connection]) -> str:
-        """Rendu SVG des traits de connexion"""
+        """Rendu SVG des traits de connexion avec interactivité (hover, tooltip)"""
         lines = ["  <!-- CONNEXIONS INTER-REGIONS -->"]
         
         for i, conn in enumerate(conns):
@@ -361,10 +375,21 @@ class ConnectomeSVGGenerator:
             
             # Tooltip title pour interaction
             title = f"{self.regions[conn.from_id].name_fr} -> {self.regions[conn.to_id].name_fr}: {conn.synapses:,} synapses"
+            conn_class = f"conn from-{conn.from_id} to-{conn.to_id}"
             
-            lines.append(f'''    <path d="{path_d}" 
+            # Trait visible
+            lines.append(f'''    <path class="{conn_class}" d="{path_d}" 
           stroke="{color}" stroke-width="{thickness:.1f}" 
-          fill="none" opacity="{opacity:.2f}" marker-end="{marker}">
+          fill="none" stroke-opacity="{opacity:.2f}" marker-end="{marker}">
+      <title>{title}
+{conn.description}</title>
+    </path>''')
+            
+            # Trait transparent plus épais pour faciliter le survol
+            hover_w = max(thickness + 8, 16)
+            lines.append(f'''    <path class="{conn_class}" d="{path_d}" 
+          stroke="transparent" stroke-width="{hover_w:.1f}" 
+          fill="none" stroke-opacity="0" style="pointer-events:stroke">
       <title>{title}
 {conn.description}</title>
     </path>''')
@@ -381,16 +406,30 @@ class ConnectomeSVGGenerator:
         return "\n".join(lines)
     
     def _render_nodes(self, selected: Optional[str]) -> str:
-        """Rendu SVG des noeuds regions"""
+        """Rendu SVG des noeuds regions avec interactivité (hover, tooltip, lien)"""
         lines = ["  <!-- REGIONS FONCTIONNELLES -->"]
+        
+        # Determiner la vue cible pour le clic selon le type de region
+        def region_view(reg: Region) -> str:
+            if reg.region_type == "sensory":
+                return "connectome_drosophila_sensory.svg"
+            elif reg.region_type == "motor":
+                return "connectome_drosophila_motor.svg"
+            else:
+                return "connectome_drosophila_full.svg"
         
         for rid, reg in self.regions.items():
             px, py = self.positions[rid]
             is_selected = selected == rid
             radius = 16 + math.sqrt(reg.neurons) * 0.45
             glow = 'filter="url(#glow)"' if is_selected else ''
+            target_view = region_view(reg)
             
-            lines.append(f'''    <g transform="translate({px:.1f},{py:.1f})">
+            lines.append(f'''    <a href="{target_view}" target="_top">
+    <g class="region" transform="translate({px:.1f},{py:.1f})">
+      <title>{reg.name_fr}
+{reg.neurons} neurones
+{reg.description}</title>
       <circle r="{radius:.1f}" fill="{reg.color}" opacity="0.12" {glow}/>
       <circle r="{radius*0.55:.1f}" fill="{reg.color}" opacity="0.5"/>
       <circle r="5" fill="{reg.color}"/>
@@ -398,12 +437,13 @@ class ConnectomeSVGGenerator:
             fill="#e2e8f0" font-size="12" font-weight="600">{rid}</text>
       <text y="{radius+32:.1f}" text-anchor="middle" 
             fill="#64748b" font-size="9">{reg.neurons}N</text>
-    </g>''')
+    </g>
+    </a>''')
         
         return "\n".join(lines)
     
     def _render_title_and_legend(self, mode: str) -> str:
-        """Rendu du titre et de la legende"""
+        """Rendu du titre, de la legende et de la barre de navigation"""
         mode_titles = {
             "full": "Vue d'ensemble complete",
             "sensory": "Flux sensoriels ascendants",
@@ -414,8 +454,28 @@ class ConnectomeSVGGenerator:
         
         title = mode_titles.get(mode, "Vue d'ensemble")
         
+        # Navigation entre les vues
+        nav_links = []
+        nav_modes = [
+            ("full", "Complete"),
+            ("sensory", "Sensoriel"),
+            ("motor", "Moteur"),
+            ("recurrent", "Recurrent"),
+            ("associative", "Associatif"),
+        ]
+        nx = self.width / 2 - 220
+        for nm, nl in nav_modes:
+            active = "fill:#38bdf8;font-weight:700" if nm == mode else "fill:#64748b"
+            nav_links.append(
+                f'''    <a href="connectome_drosophila_{nm}.svg" target="_top">
+      <text x="{nx}" y="92" text-anchor="middle" font-size="12" font-family="monospace"
+            style="cursor:pointer;{active}">[{nl}]</text>
+    </a>'''
+            )
+            nx += 110
+        
         legend_items = []
-        y_start = 120
+        y_start = 140
         for ctype, color in CONN_COLORS.items():
             label = CONN_LABELS.get(ctype, ctype)
             legend_items.append(
@@ -433,7 +493,9 @@ class ConnectomeSVGGenerator:
         fill="#64748b" font-size="13">
     {title} · Winding et al. 2023 · 3 016 neurones · 548 000 synapses
   </text>
-  <text x="30" y="100" fill="#e2e8f0" font-size="13" font-weight="600">Legende des faisceaux</text>
+  <!-- BARRE DE NAVIGATION -->
+{chr(10).join(nav_links)}
+  <text x="30" y="125" fill="#e2e8f0" font-size="13" font-weight="600">Legende des faisceaux</text>
 {chr(10).join(legend_items)}'''
     
     def _render_infobox(self, conns: List[Connection]) -> str:
@@ -465,7 +527,7 @@ class ConnectomeSVGGenerator:
 # FONCTIONS UTILITAIRES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def generate_all_views(output_dir: str = "./connectome_output"):
+def generate_all_views(output_dir: str = "."):
     """Genere toutes les vues SVG du connectome"""
     out = Path(output_dir)
     out.mkdir(exist_ok=True)
