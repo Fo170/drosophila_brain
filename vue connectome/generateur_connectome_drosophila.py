@@ -604,7 +604,7 @@ if __name__ == "__main__":
     # Generer toutes les vues SVG
     print("[1/2] Generation des vues SVG...")
     files = generate_all_views()
-    print(f"\n  {len(files)} fichiers SVG generes dans ./connectome_output/")
+    print(f"\n  {len(files)} fichiers SVG generes dans le repertoire courant")
     print()
     
     # Exporter les donnees JSON
